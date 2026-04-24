@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מחולל מדיניות פרטיות</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 p-6 text-slate-900">
+
+<div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow">
+  <h1 class="text-2xl font-bold mb-4">מחולל מדיניות פרטיות</h1>
+
+  <!-- Company -->
+  <div class="mb-4">
+    <label class="font-semibold">שם החברה
+      <span title="חובה לציין מי בעל המאגר" class="cursor-help">[?]</span>
+    </label>
+    <input id="company" class="w-full border p-2 rounded mt-1">
+  </div>
+
+  <!-- Contact -->
+  <div class="mb-4">
+    <label class="font-semibold">אימייל ליצירת קשר
+      <span title="כדי שהמשתמש ידע למי לפנות" class="cursor-help">[?]</span>
+    </label>
+    <input id="contact" class="w-full border p-2 rounded mt-1">
+  </div>
+
+  <!-- Data Types -->
+  <div class="mb-4">
+    <label class="font-semibold">איזה מידע נאסף?
+      <span title="אסוף רק מידע הכרחי" class="cursor-help">[?]</span>
+    </label>
+    <div class="mt-2 space-y-1">
+      <label><input type="checkbox" value="שם" class="data"> שם</label><br>
+      <label><input type="checkbox" value="אימייל" class="data"> אימייל</label><br>
+      <label><input type="checkbox" value="טלפון" class="data"> טלפון</label>
+    </div>
+  </div>
+
+  <!-- Purpose -->
+  <div class="mb-4">
+    <label class="font-semibold">מטרת האיסוף
+      <span title="חובה לפרט את המטרה" class="cursor-help">[?]</span>
+    </label>
+    <input id="purpose" class="w-full border p-2 rounded mt-1">
+  </div>
+
+  <!-- Button -->
+  <button onclick="generate()" class="w-full bg-black text-white p-3 rounded-xl font-bold">
+    צור מדיניות
+  </button>
+</div>
+
+<script>
+function generate() {
+  const data = {
+    company: document.getElementById('company').value,
+    contact: document.getElementById('contact').value,
+    dataCollected: [...document.querySelectorAll('.data:checked')].map(e => e.value),
+    purpose: document.getElementById('purpose').value
+  }
+
+  console.log(data)
+  alert('נוצר JSON - תפתח Console (F12)')
+}
+</script>
+
+</body>
+</html>
