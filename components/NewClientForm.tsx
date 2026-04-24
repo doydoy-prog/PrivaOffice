@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { createClient } from "@/lib/store";
+import { useState, useTransition } from "react";
+import { createOrganization } from "@/lib/actions/organizations";
 import { OrganizationType } from "@/lib/types";
 
 export default function NewClientForm() {
@@ -11,18 +11,20 @@ export default function NewClientForm() {
   const [name, setName] = useState("");
   const [type, setType] = useState<OrganizationType>("nonprofit");
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setError("יש להזין שם ארגון");
-      return;
-    }
-    setSubmitting(true);
-    createClient(trimmed, type);
-    router.push("/");
+    const form = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const result = await createOrganization(form);
+      if (!result.ok) {
+        setError(result.error ?? "לא ניתן ליצור את הארגון");
+        return;
+      }
+      router.push("/");
+      router.refresh();
+    });
   }
 
   return (
@@ -56,6 +58,7 @@ export default function NewClientForm() {
           </label>
           <input
             id="name"
+            name="name"
             className="field-input"
             placeholder="לדוגמה: עמותת אחוות תורה"
             value={name}
@@ -73,6 +76,7 @@ export default function NewClientForm() {
           </label>
           <select
             id="type"
+            name="type"
             className="field-input field-select"
             value={type}
             onChange={(e) => setType(e.target.value as OrganizationType)}
@@ -97,12 +101,8 @@ export default function NewClientForm() {
         )}
 
         <div className="mt-5 flex gap-2.5">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={submitting}
-          >
-            {submitting ? "שומר…" : "צור והתחל"}
+          <button type="submit" className="btn btn-primary" disabled={pending}>
+            {pending ? "שומר…" : "צור והתחל"}
           </button>
           <Link href="/" className="btn btn-ghost">
             ביטול
