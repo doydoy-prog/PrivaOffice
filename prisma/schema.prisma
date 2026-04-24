@@ -1,0 +1,119 @@
+// DataBee - Privacy compliance platform for Israeli organizations.
+// Schema mirrors the CLAUDE.md specification in full.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id            String          @id @default(cuid())
+  name          String
+  type          String          // nonprofit, company, public
+  createdAt     DateTime        @default(now())
+  users         User[]
+  dataAssets    DataAsset[]
+  vendors       Vendor[]
+  documents     Document[]
+  tasks         Task[]
+  dpoAssessment DpoAssessment[]
+}
+
+model User {
+  id             String        @id @default(cuid())
+  email          String        @unique
+  name           String
+  role           String        // client, dpo, admin
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+}
+
+model DataAsset {
+  id                String            @id @default(cuid())
+  organizationId    String
+  organization      Organization      @relation(fields: [organizationId], references: [id])
+  name              String
+  purpose           String[]          // purpose codes
+  collectionMethods String[]          // method codes
+  subjectCategories String[]          // subject category codes
+  dataTypes         String[]          // data type codes
+  sensitiveTypes    String[]          // subset of dataTypes that are sensitive
+  subjectsCount     Int               @default(0)
+  permissionsCount  Int               @default(0)
+  transferAbroad    Boolean           @default(false)
+  securityLevel     String            @default("basic") // basic, medium, high
+  managerName       String?
+  managerRole       String?
+  managerEmail      String?
+  status            String            @default("draft") // draft, under_review, approved
+  vendors           DataAssetVendor[]
+  documents         Document[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model Vendor {
+  id             String            @id @default(cuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id])
+  name           String
+  activity       String?
+  hasDpa         Boolean           @default(false)
+  dpaSignedAt    DateTime?
+  dpaExpiresAt   DateTime?
+  dataAssets     DataAssetVendor[]
+}
+
+model DataAssetVendor {
+  dataAssetId String
+  vendorId    String
+  dataAsset   DataAsset @relation(fields: [dataAssetId], references: [id])
+  vendor      Vendor    @relation(fields: [vendorId], references: [id])
+
+  @@id([dataAssetId, vendorId])
+}
+
+model Document {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  dataAssetId    String?
+  dataAsset      DataAsset?   @relation(fields: [dataAssetId], references: [id])
+  type           String       // db_definition, privacy_policy, security_policy, dpa, consent
+  version        Int          @default(1)
+  status         String       @default("draft") // draft, under_review, approved
+  content        Json
+  approvedAt     DateTime?
+  approvedById   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  taskType       String       // matches TASKS registry ids
+  status         String       @default("open") // open, in_progress, done
+  dueDate        DateTime?
+  completedAt    DateTime?
+  evidence       String?      // file URL
+  notes          String?
+}
+
+model DpoAssessment {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  questionKey    String       // e.g. "4.1_2" = sheet 4.1, question 2
+  status         String?      // done, partial, no, na
+  date           DateTime?
+  notes          String?
+  autoFilled     Boolean      @default(false)
+
+  @@unique([organizationId, questionKey])
+}
