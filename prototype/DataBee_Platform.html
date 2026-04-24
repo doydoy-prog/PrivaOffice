@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataBee | פלטפורמת הסדרת פרטיות</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0A1F3D;--navy-l:#1a3a5f;--navy-ll:#2d5280;--gold:#D4A94A;--gold-b:#E8BF5E;--gold-d:#A88536;--bg:#F7F5EF;--bg-c:#FFF;--tx:#0A1F3D;--tx-m:#5a6b85;--tx-s:#8a97ab;--bd:#E5E0D0;--ok:#2d8659;--ok-bg:#E5F0EA;--warn:#C77700;--warn-bg:#FFF2DD;--err:#A83232;--err-bg:#FBEAEA;--sh:0 4px 20px rgba(10,31,61,.08);--sh-lg:0 12px 40px rgba(10,31,61,.15)}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Heebo',-apple-system,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+
+.hdr{background:var(--navy);color:#fff;padding:12px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+.logo{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:700;cursor:pointer}.logo-m{width:30px;height:30px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--navy);font-size:16px}
+.hdr-center{display:flex;align-items:center;gap:14px}
+.client-sel{position:relative}.client-btn{display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s;min-width:160px}.client-btn:hover{background:rgba(255,255,255,.12)}
+.client-btn .avt{width:24px;height:24px;font-size:11px}.client-btn svg{margin-right:auto;width:14px;height:14px;opacity:.5}
+.client-dd{position:absolute;top:calc(100% + 6px);right:0;width:300px;background:#fff;border:1px solid var(--bd);border-radius:12px;box-shadow:var(--sh-lg);z-index:200;display:none;overflow:hidden;max-height:400px;overflow-y:auto}.client-dd.open{display:block}
+.client-dd-item{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:.1s;font-size:13.5px;color:var(--tx);border-bottom:1px solid var(--bd)}.client-dd-item:last-child{border-bottom:none}.client-dd-item:hover{background:var(--bg)}.client-dd-item.active{background:rgba(212,169,74,.1);font-weight:600}
+.client-dd-item .avt{width:28px;height:28px;font-size:12px}.client-dd-add{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;color:var(--gold-d);font-weight:600;font-size:13px;background:rgba(212,169,74,.06)}.client-dd-add:hover{background:rgba(212,169,74,.12)}
+.avt{width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+.hdr-nav{display:flex;gap:6px}.hdr-nav a{color:rgba(255,255,255,.6);text-decoration:none;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}.hdr-nav a:hover{color:#fff;background:rgba(255,255,255,.07)}.hdr-nav a.active{color:var(--gold);background:rgba(212,169,74,.1)}
+@media(max-width:768px){.hdr-nav{display:none}.hdr{padding:10px 14px}}
+
+#app{min-height:calc(100vh - 56px)}
+
+/* Welcome + New Client */
+.welcome{max-width:640px;margin:60px auto;padding:0 20px;text-align:center}.welcome h1{font-size:28px;font-weight:800;color:var(--navy);margin-bottom:10px}.welcome p{font-size:15px;color:var(--tx-m);line-height:1.7;margin-bottom:30px}
+.card{background:var(--bg-c);border:1.5px solid var(--bd);border-radius:16px;padding:32px;box-shadow:var(--sh);text-align:right}.card h2{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:20px}
+.form-row{margin-bottom:16px}.form-label{display:block;font-size:13px;font-weight:600;color:var(--tx-m);margin-bottom:6px}
+.form-input{width:100%;padding:12px 16px;font-size:14.5px;font-family:inherit;border:2px solid var(--bd);border-radius:10px;background:var(--bg-c);color:var(--tx);transition:.2s}.form-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 4px rgba(212,169,74,.15)}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%235a6b85' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 14px center;padding-left:36px}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:500px){.form-row-2{grid-template-columns:1fr}}
+
+/* Dashboard */
+.dash{padding:32px 40px 60px;max-width:1200px;margin:0 auto}@media(max-width:600px){.dash{padding:20px 16px}}
+.dash-hero{background:linear-gradient(135deg,var(--navy),var(--navy-l));border-radius:18px;padding:32px 36px;color:#fff;position:relative;overflow:hidden;margin-bottom:28px}
+.dash-hero::after{content:'';position:absolute;top:-40%;left:-15%;width:400px;height:400px;background:radial-gradient(circle,rgba(212,169,74,.2),transparent 70%);pointer-events:none}
+.dash-hero-row{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;flex-wrap:wrap;gap:20px}
+.dash-hero h1{font-size:24px;font-weight:800;margin-bottom:4px}.dash-hero p{font-size:14px;color:rgba(255,255,255,.7);max-width:500px;line-height:1.6}
+.score-ring{display:flex;flex-direction:column;align-items:center;gap:4px}.score-ring svg{width:80px;height:80px;transform:rotate(-90deg)}.score-ring .bg{fill:none;stroke:rgba(255,255,255,.12);stroke-width:6}.score-ring .fg{fill:none;stroke:var(--gold);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s}.score-ring .val{font-size:22px;font-weight:800;fill:#fff;text-anchor:middle;dominant-baseline:central;transform:rotate(90deg);transform-origin:center}.score-label{font-size:11px;color:var(--gold);font-weight:600}
+
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}@media(max-width:700px){.stat-row{grid-template-columns:1fr 1fr}}
+.stat-card{background:var(--bg-c);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;box-shadow:var(--sh)}.stat-card-label{font-size:11px;color:var(--tx-s);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}.stat-card-val{font-size:22px;font-weight:800;color:var(--navy)}.stat-card-sub{font-size:12px;color:var(--tx-m);margin-top:2px}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.section-head h2{font-size:18px;font-weight:700;color:var(--navy)}.section-head .badge{font-size:12px;padding:4px 12px;background:var(--navy);color:var(--gold);border-radius:12px;font-weight:600}
+
+/* Tabs for dashboard sections */
+.dash-tabs{display:flex;gap:4px;margin-bottom:22px;background:var(--bg);border-radius:10px;padding:4px;border:1px solid var(--bd)}
+.dash-tab{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;cursor:pointer;transition:.15s;color:var(--tx-m);background:transparent;border:none;font-family:inherit}
+.dash-tab.active{background:var(--navy);color:var(--gold);box-shadow:0 2px 8px rgba(10,31,61,.2)}
+
+.tasks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}@media(max-width:700px){.tasks-grid{grid-template-columns:1fr}}
+.task-card{background:var(--bg-c);border:1.5px solid var(--bd);border-radius:14px;padding:20px 22px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.task-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:var(--sh-lg)}
+.task-card.done{opacity:.75;border-color:var(--ok)}.task-card.done::before{content:'✓';position:absolute;top:14px;left:14px;width:28px;height:28px;background:var(--ok);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.task-card.in-progress{border-color:var(--gold)}.task-card.in-progress::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;background:linear-gradient(90deg,var(--gold-d),var(--gold))}
+.task-card-header{display:flex;align-items:center;gap:12px}
+.task-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}.task-icon.deep{background:var(--navy);color:var(--gold)}.task-icon.simple{background:var(--bg);color:var(--tx-m);border:1px solid var(--bd)}
+.task-card-title{font-size:15px;font-weight:700;color:var(--navy);line-height:1.3}.task-card-subtitle{font-size:12px;color:var(--tx-m)}
+.task-card-desc{font-size:13px;color:var(--tx-m);line-height:1.55}
+.task-card-footer{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.task-badge{font-size:10.5px;padding:3px 8px;border-radius:8px;font-weight:600}.b-hi{background:var(--err-bg);color:var(--err)}.b-md{background:var(--warn-bg);color:var(--warn)}.b-lo{background:var(--ok-bg);color:var(--ok)}.b-ref{background:rgba(10,31,61,.06);color:var(--navy)}.b-deep{background:rgba(212,169,74,.15);color:var(--gold-d)}
+
+/* Module layout */
+.mod-layout{display:grid;grid-template-columns:1fr 380px;min-height:calc(100vh - 56px)}@media(max-width:980px){.mod-layout{grid-template-columns:1fr}.mod-side{display:none}}
+.mod-main{padding:32px 40px 60px}@media(max-width:600px){.mod-main{padding:20px 16px 40px}}
+.mod-side{background:var(--navy);color:#fff;padding:24px 22px;overflow-y:auto;position:sticky;top:56px;height:calc(100vh - 56px);display:flex;flex-direction:column}
+.mod-back{display:inline-flex;align-items:center;gap:6px;color:var(--tx-m);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:20px;padding:6px 12px;border-radius:8px;border:1px solid var(--bd);background:transparent;transition:.15s;font-family:inherit}.mod-back:hover{color:var(--navy);border-color:var(--navy)}
+.mod-title-row{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.mod-title-icon{width:44px;height:44px;border-radius:12px;background:var(--navy);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.mod-title{font-size:24px;font-weight:800;color:var(--navy)}.mod-subtitle{font-size:14px;color:var(--tx-m);margin-bottom:24px;line-height:1.6}
+.mod-section{background:var(--bg-c);border:1px solid var(--bd);border-radius:14px;padding:24px 26px;margin-bottom:18px;box-shadow:var(--sh)}
+.mod-section h3{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.mod-section p{font-size:14.5px;color:var(--tx);line-height:1.7;margin-bottom:12px}
+
+/* Editable fields */
+.edit-field{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;font-size:14px}
+.edit-field label{font-weight:600;color:var(--tx-m);min-width:120px;font-size:13px;flex-shrink:0}
+.edit-field input,.edit-field select,.edit-field textarea{flex:1;padding:6px 10px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;font-size:13.5px;background:#fff;color:var(--tx)}
+.edit-field textarea{min-height:50px;resize:vertical}
+.edit-field input:focus,.edit-field select:focus,.edit-field textarea:focus{outline:none;border-color:var(--gold)}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}
+.chip{padding:5px 12px;border-radius:16px;font-size:12.5px;cursor:pointer;transition:.15s;user-select:none;border:1.5px solid var(--bd);background:#fff;color:var(--tx)}.chip:hover{border-color:var(--gold);background:#FFFBF2}.chip.on{background:var(--navy);color:var(--gold);border-color:var(--navy)}.chip.sensitive.on{background:var(--gold-d);color:#fff;border-color:var(--gold-d)}
+
+/* Doc preview */
+.doc-preview{background:#FDFCF8;border:2px solid var(--bd);border-radius:14px;padding:28px 30px;position:relative;font-size:14px;line-height:1.8;color:var(--tx)}
+.doc-preview.draft::before{content:'טיוטה - דורש אישור DPO';position:absolute;top:12px;left:12px;padding:4px 12px;background:var(--warn-bg);color:var(--warn);border-radius:8px;font-size:11px;font-weight:700}
+.doc-preview h4{font-size:16px;font-weight:700;color:var(--navy);margin:18px 0 8px;padding-top:14px;border-top:1px solid var(--bd)}.doc-preview h4:first-child{border-top:none;padding-top:0;margin-top:0}
+.doc-preview ul{padding-right:20px;margin:8px 0}.doc-preview li{margin-bottom:4px}
+
+/* DPO Banner */
+.dpo-banner{background:linear-gradient(135deg,#FFF7E6,#FFF2D6);border:1.5px solid var(--gold);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.dpo-banner-icon{width:38px;height:38px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:18px;flex-shrink:0}
+.dpo-banner-text{flex:1}.dpo-banner-title{font-size:13px;font-weight:700;color:var(--gold-d)}.dpo-banner-desc{font-size:12.5px;color:var(--navy);margin-top:2px}
+.consent-preview{background:#fff;border:2px solid var(--bd);border-radius:12px;padding:20px;margin:14px 0}
+.consent-preview label{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--tx);line-height:1.55;cursor:pointer;margin-bottom:10px}
+.consent-preview input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--navy);flex-shrink:0}
+.consent-preview .form-mock{padding:12px 16px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--tx-s)}
+
+/* DPO Assessment zone */
+.dpo-zone{background:var(--bg-c);border:2px solid var(--navy);border-radius:16px;padding:28px;margin-bottom:20px}
+.dpo-zone h3{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.dpo-zone h3 span{background:var(--navy);color:var(--gold);padding:3px 10px;border-radius:6px;font-size:12px}
+.dpo-q{padding:12px 16px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;display:grid;grid-template-columns:1fr 140px 120px;gap:10px;align-items:center;font-size:13.5px}
+.dpo-q-text{line-height:1.5;color:var(--tx)}.dpo-q-text.auto{color:var(--ok);font-weight:600}
+.dpo-q select{padding:6px 8px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;font-size:12.5px;background:#fff}
+.dpo-q input[type=date]{padding:5px 8px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;font-size:12px}
+.dpo-q.auto-filled{background:var(--ok-bg);border-color:var(--ok)}
+@media(max-width:700px){.dpo-q{grid-template-columns:1fr;gap:6px}}
+
+/* Sidebar */
+.side-section{margin-bottom:20px}.side-label{font-size:10px;font-weight:600;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.side-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 16px;margin-bottom:10px}.side-card-val{font-size:15px;font-weight:700;color:#fff}.side-card-sub{font-size:11.5px;color:rgba(255,255,255,.6);margin-top:3px}
+.side-link{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.7);font-size:12.5px;cursor:pointer;transition:.15s;margin-bottom:6px;text-decoration:none}.side-link:hover{background:rgba(255,255,255,.08);color:#fff}.side-link svg{width:14px;height:14px;flex-shrink:0;color:var(--gold)}
+.ai-trigger{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(212,169,74,.15),rgba(212,169,74,.05));border:1px solid rgba(212,169,74,.3);border-radius:12px;cursor:pointer;transition:.2s;margin-top:auto}
+.ai-trigger:hover{background:rgba(212,169,74,.2);border-color:var(--gold)}
+.ai-trigger-avatar{width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0}
+.ai-trigger-name{font-size:13px;font-weight:700;color:var(--gold)}.ai-trigger-desc{font-size:11px;color:rgba(255,255,255,.6)}
+
+.btn{padding:10px 22px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.btn-p{background:var(--navy);color:var(--gold)}.btn-p:hover{background:var(--navy-l);transform:translateY(-1px)}.btn-p:disabled{background:var(--bd);color:var(--tx-s);cursor:not-allowed;transform:none}
+.btn-g{background:transparent;color:var(--tx-m);border:1px solid var(--bd)}.btn-g:hover{color:var(--navy);border-color:var(--navy)}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:var(--gold-b)}
+.btn-ok{background:var(--ok);color:#fff}.btn-sm{padding:7px 14px;font-size:12.5px;border-radius:8px}
+.btn-err{background:var(--err);color:#fff;font-size:12.5px;padding:6px 12px;border-radius:7px}
+
+/* AI Chat */
+.ai-overlay{position:fixed;inset:0;background:rgba(10,31,61,.35);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(2px)}.ai-overlay.on{opacity:1;pointer-events:auto}
+.ai-panel{position:fixed;top:0;left:0;width:480px;height:100vh;background:#fff;z-index:201;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform .4s cubic-bezier(.25,1,.32,1);box-shadow:4px 0 30px rgba(10,31,61,.2)}.ai-panel.on{transform:translateX(0)}
+@media(max-width:600px){.ai-panel{width:100%}}
+.ai-hdr{background:linear-gradient(135deg,var(--navy),var(--navy-l));color:#fff;padding:18px 22px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ai-hdr-avt{width:40px;height:40px;border-radius:50%;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0}
+.ai-hdr-name{font-size:15px;font-weight:700}.ai-hdr-status{font-size:11.5px;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:5px}.ai-hdr-status::before{content:'';width:6px;height:6px;border-radius:50%;background:#4ade80}
+.ai-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer}.ai-close:hover{background:rgba(255,255,255,.2)}
+.ai-ctx{background:#FFFBF2;border-bottom:1px solid var(--bd);padding:10px 22px;font-size:12px;color:var(--gold-d);display:flex;align-items:center;gap:7px}
+.ai-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+.ai-m{display:flex;gap:8px;align-items:flex-start;animation:su .3s ease}.ai-m.u{flex-direction:row-reverse}
+.ai-m-avt{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px}.ai-m-avt.b{background:var(--navy);color:var(--gold)}.ai-m-avt.u{background:var(--gold);color:var(--navy)}
+.ai-m-bub{padding:11px 15px;border-radius:13px;font-size:13.5px;line-height:1.6;max-width:340px;white-space:pre-wrap}.ai-m.b .ai-m-bub{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-top-right-radius:3px}.ai-m.u .ai-m-bub{background:var(--navy);color:#fff;border-top-left-radius:3px}.ai-m-bub strong{font-weight:700}
+.ai-sugs{padding:8px 18px 4px;display:flex;gap:5px;flex-wrap:wrap}
+.ai-sug{padding:6px 12px;background:#fff;border:1px solid var(--bd);border-radius:14px;font-size:12px;color:var(--navy-l);cursor:pointer;transition:.15s;font-family:inherit}.ai-sug:hover{border-color:var(--gold);background:#FFFBF2}
+.ai-input-area{border-top:1px solid var(--bd);padding:12px 18px 16px;background:#fff;flex-shrink:0}
+.ai-input-wrap{display:flex;gap:7px;align-items:flex-end;background:var(--bg);border:2px solid var(--bd);border-radius:12px;padding:5px 5px 5px 12px;transition:border-color .2s}.ai-input-wrap:focus-within{border-color:var(--gold)}
+.ai-input{flex:1;background:transparent;border:none;outline:none;resize:none;font-family:inherit;font-size:13.5px;min-height:26px;max-height:100px;padding:7px 0;color:var(--tx);line-height:1.4}
+.ai-send{width:34px;height:34px;border-radius:8px;background:var(--navy);color:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}.ai-send:disabled{background:var(--bd);color:var(--tx-s);cursor:not-allowed}
+.ai-foot{text-align:center;font-size:10.5px;color:var(--tx-s);margin-top:6px}
+
+.api-ovl{position:fixed;inset:0;background:rgba(10,31,61,.5);backdrop-filter:blur(4px);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}.api-ovl.on{display:flex}
+.api-box{background:#fff;border-radius:16px;padding:28px;max-width:440px;width:100%;box-shadow:var(--sh-lg)}.api-box h3{color:var(--navy);margin-bottom:10px;font-size:18px}.api-box p{color:var(--tx-m);font-size:13.5px;line-height:1.6;margin-bottom:14px}.api-box .note{background:#FFFBF2;border:1px solid rgba(212,169,74,.35);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px;color:var(--navy)}.api-box input{width:100%;padding:11px 14px;border:2px solid var(--bd);border-radius:10px;font-family:inherit;font-size:13.5px;direction:ltr;margin-bottom:14px}.api-box input:focus{outline:none;border-color:var(--gold)}.api-acts{display:flex;gap:8px;justify-content:flex-end}
+
+.typing{display:inline-flex;gap:4px;padding:10px 14px}.typing-dot{width:7px;height:7px;background:var(--tx-s);border-radius:50%;animation:tp 1.4s infinite ease-in-out}.typing-dot:nth-child(2){animation-delay:.2s}.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes tp{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+@keyframes su{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="logo" onclick="navigate('home')"><div class="logo-m">D</div><span>DataBee</span></div>
+  <div class="hdr-center">
+    <div class="client-sel">
+      <button class="client-btn" id="clientBtn" onclick="toggleDD()">
+        <div class="avt" id="cAvt">+</div>
+        <span id="cName">בחר / הוסף לקוח</span>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="client-dd" id="clientDD"></div>
+    </div>
+    <nav class="hdr-nav" id="navLinks"></nav>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<div class="ai-overlay" id="aiOverlay" onclick="closeAI()"></div>
+<aside class="ai-panel" id="aiPanel">
+  <header class="ai-hdr"><div class="ai-hdr-avt">ע</div><div style="flex:1"><div class="ai-hdr-name">עמית</div><div class="ai-hdr-status">יועץ פרטיות · Claude</div></div><button class="ai-close" onclick="closeAI()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></header>
+  <div class="ai-ctx" id="aiCtx"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span id="aiCtxText">הקשר כללי</span></div>
+  <div class="ai-msgs" id="aiMsgs"></div>
+  <div class="ai-sugs" id="aiSugs"></div>
+  <div class="ai-input-area"><div class="ai-input-wrap"><textarea id="aiIn" class="ai-input" placeholder="שאל את עמית..." rows="1"></textarea><button class="ai-send" id="aiSendBtn" disabled onclick="sendAI()"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9-7-9-7m0 14l-9-7 9-7"/></svg></button></div><div class="ai-foot">לשאלות משפטיות התייעץ עם DPO</div></div>
+</aside>
+
+<div class="api-ovl" id="apiModal"><div class="api-box"><h3>הפעלת עמית</h3><p>נדרש API key של Anthropic.</p><div class="note"><strong>אין?</strong> לחץ "מצב דמו".</div><input type="password" id="apiKeyIn" placeholder="sk-ant-..." autocomplete="off"><div class="api-acts"><button class="btn btn-g" onclick="useDemoMode()">מצב דמו</button><button class="btn btn-p" onclick="saveApiKey()">שמור</button></div></div></div>
+
+<script>
+// ===================================================================
+// MULTI-CLIENT STATE
+// ===================================================================
+let S = { clients: {}, activeClient: null, aiMode: null, apiKey: null, route: 'home', routeParam: null, aiCtx: null, aiHist: {} };
+
+function load() {
+  try { const d = JSON.parse(localStorage.getItem('databee_v4') || '{}'); Object.assign(S, d); } catch(e) {}
+}
+function save() {
+  try { localStorage.setItem('databee_v4', JSON.stringify(S)); } catch(e) {}
+}
+function C() { return S.activeClient ? S.clients[S.activeClient] : null; } // active client shorthand
+
+function newClient(name, type) {
+  const id = 'c_' + Date.now();
+  S.clients[id] = {
+    id, name, type: type || 'nonprofit',
+    db: { name: '', subjectCategories: [], purpose: [], collectionMethods: [], subjectsCount: 0, permissionsCount: 0, dataTypes: [], sensitiveTypes: [], transferAbroad: null, vendors: [], managerName: '', managerRole: '', managerEmail: '', securityLevel: '' },
+    tasks: {},
+    dpoAssessment: {},
+  };
+  S.activeClient = id;
+  save();
+  return id;
+}
+
+function deleteClient(id) { delete S.clients[id]; if (S.activeClient === id) S.activeClient = null; save(); }
+
+function calcSecurity(db) {
+  const hs = db.sensitiveTypes && db.sensitiveTypes.length > 0;
+  const sc = db.subjectsCount || 0; const pc = db.permissionsCount || 0;
+  if (hs && (sc >= 100000 || pc > 100)) return 'high';
+  if (hs) { if (pc <= 10) return 'basic'; return 'medium'; }
+  return 'basic';
+}
+
+function secLabel(l) { return l === 'high' ? 'גבוהה' : l === 'medium' ? 'בינונית' : 'בסיסית'; }
+
+// ===================================================================
+// TASKS REGISTRY
+// ===================================================================
+const TASKS = [
+  { id:'db_definition', title:'מסמך הגדרות מאגר', sub:'תקנה 2', desc:'הגדרת פעולות האיסוף, מטרות, סוגי מידע, סיכונים, בעלי תפקידים.', icon:'📋', pri:'high', type:'deep', ref:'תקנה 2', dpoSheet:'4.1' },
+  { id:'privacy_policy', title:'מדיניות פרטיות', sub:'סעיף 11', desc:'ניסוח מדיניות פרטיות מלאה.', icon:'📜', pri:'high', type:'deep', ref:'סעיף 11', dpoSheet:'1' },
+  { id:'consent_mechanism', title:'מנגנוני הסכמה', sub:'סעיפים 11-12', desc:'צ\'קבוקסי הסכמה לכל נקודת איסוף.', icon:'☑️', pri:'high', type:'deep', ref:'סעיפים 11-12', dpoSheet:'2' },
+  { id:'dpa_vendors', title:'הסכמי ספקים (DPA)', sub:'תקנה 15', desc:'הסכמי מיקור חוץ עם כל ספק.', icon:'🤝', pri:'high', type:'deep', ref:'תקנה 15', dpoSheet:null },
+  { id:'data_minimization', title:'צמצום מידע', sub:'תקנה 2(ג)', desc:'בחינה שנתית של מידע עודף.', icon:'🗑️', pri:'medium', type:'deep', ref:'תקנה 2(ג)', dpoSheet:'3' },
+  { id:'dsr_mechanism', title:'פניות נושאי מידע', sub:'סעיפים 13-14', desc:'מנגנון עיון, תיקון ומחיקה.', icon:'✉️', pri:'medium', type:'simple', ref:'סעיפים 13-14', dpoSheet:'9' },
+  { id:'unsubscribe', title:'הסרה מדיוור', sub:'סעיף 30א', desc:'קישור הסרה + רשימת הסרות.', icon:'🚫', pri:'medium', type:'simple', ref:'סעיף 30א', dpoSheet:'7' },
+  { id:'transfer_abroad', title:'העברות לחו"ל', sub:'תקנות העברה', desc:'בסיס משפטי להעברת מידע.', icon:'🌍', pri:'medium', type:'simple', ref:'תקנות העברה', dpoSheet:null },
+  { id:'security_policy', title:'נוהל אבטחת מידע', sub:'תקנה 4', desc:'נוהל ארגוני ברמה בינונית.', icon:'🔒', pri:'high', type:'simple', ref:'תקנה 4', dpoSheet:'4' },
+  { id:'logging', title:'בקרה ותיעוד גישה', sub:'תקנה 10', desc:'מנגנון תיעוד גישה אוטומטי.', icon:'📊', pri:'high', type:'simple', ref:'תקנה 10', dpoSheet:'5' },
+  { id:'training', title:'הדרכת מורשי גישה', sub:'תקנה 7', desc:'הדרכה תקופתית לבעלי הרשאות.', icon:'🎓', pri:'medium', type:'simple', ref:'תקנה 7', dpoSheet:'8' },
+  { id:'system_mapping', title:'מיפוי מערכות', sub:'תקנה 5', desc:'תיעוד תשתיות ורכיבים.', icon:'🗺️', pri:'medium', type:'simple', ref:'תקנה 5', dpoSheet:null },
+  { id:'annual_review', title:'בחינה שנתית', sub:'תקנה 2(ג)', desc:'בחינת היקף מידע מול מטרות.', icon:'🔄', pri:'low', type:'simple', ref:'תקנה 2(ג)', dpoSheet:null },
+  { id:'audits', title:'ביקורות תקופתיות', sub:'תקנה 16', desc:'ביקורת כל 24 חודשים.', icon:'🔍', pri:'low', type:'simple', ref:'תקנה 16', dpoSheet:'5' },
+  { id:'registration', title:'רישום מאגרים', sub:'סעיף 9', desc:'בדיקת חובת רישום והודעה.', icon:'📝', pri:'low', type:'simple', ref:'סעיף 9', dpoSheet:'6' },
+  { id:'board_oversight', title:'אחריות דירקטוריון', sub:'הנחיה 1/2022', desc:'פיקוח הנהלה על הגנת פרטיות.', icon:'🏛️', pri:'low', type:'simple', ref:'הנחיה 1/2022', dpoSheet:'10' },
+];
+
+// DPO Assessment questions (from the uploaded Excel)
+const DPO_QS = {
+  '1': [
+    'האם מוצגת מודעה כנדרש ע"פ הוראות סעיף 11 לחוק?',
+    'האם כלל הנתונים המצוינים בסעיף 11 לחוק מוצגים בהודעה?',
+    'במערכת אוטומטית (בוט) – האם היידוע מתקיים כנדרש?',
+    'האם נבדק הצורך בפירוט נרחב יותר של נתונים?',
+  ],
+  '2': [
+    'האם מוצגים בפני נושאי המידע כלל הנתונים לקבלת הסכמה מדעת?',
+    'האם הנתונים מוצגים בצורה מובנת ופשוטה?',
+    'האם קיים חשש שהסכמה ניתנת שלא מרצון חופשי?',
+    'האם לא נעשה שימוש ב"טקטיקות אפלות" (dark patterns)?',
+    'האם נבחנה אפשרות למעבר ממנגנון opt-out ל-opt-in?',
+    'האם ניתנת אפשרות לנושאי מידע לחזור מהסכמתם?',
+  ],
+  '3': [
+    'האם המידע הנאסף נדרש למטרות האיסוף או למטרות המאגר?',
+    'האם נאסף מידע שאינו נדרש למטרות האיסוף?',
+    'האם המידע משמש אך ורק למטרת איסופו?',
+    'האם בוצעה בדיקה שנתית של מידע עודף במאגר?',
+    'האם כל עיבוד מידע מצד שלישי מבוצע בהרשאה בתוקף?',
+    'האם המידע נאסף בהתאם לחוק הגנת הפרטיות?',
+    'האם נבחנה אפשרות למחיקת מידע עודף שנמצא?',
+  ],
+  '4': [
+    'האם קיים נוהל אבטחת מידע בארגון?',
+    'האם קיים מסמך הגדרות מאגר?',
+    'האם נוהל אבטחת המידע הובא לאישור הנהלה?',
+    'האם נוהל אבטחת המידע כולל כלל הרכיבים הנדרשים (תקנה 4)?',
+    'האם מסמך הגדרות מאגר הובא לאישור הנהלה?',
+    'האם בוצעו מבדקי חדירות (רמה גבוהה)?',
+    'האם בוצע סקר סיכונים (רמה גבוהה)?',
+    'האם התקיים דיון בהנהלה על אירועי אבטחה (רמה בינונית)?',
+    'האם בוצעה ביקורת תקופתית (רמה בינונית/גבוהה)?',
+    'האם נבחן הצורך בעדכון נוהל אבטחת מידע (שנתי)?',
+  ],
+  '4.1': [
+    'תיאור כללי של פעולות האיסוף והשימוש - סעיף 2(א)(1)',
+    'תיאור מטרות השימוש במידע - סעיף 2(א)(2)',
+    'סוגי המידע הכלולים במאגר - סעיף 2(א)(3)',
+    'העברת מידע לחו"ל - סעיף 2(א)(4)',
+    'עיבוד מידע באמצעות מחזיק - סעיף 2(א)(5)',
+    'סיכונים עיקריים ואופן ההתמודדות - סעיף 2(א)(6)',
+    'שמות מנהל המאגר, מחזיק וממונה אבטחה - סעיף 2(א)(7)',
+  ],
+  '5': [
+    'האם נבנתה תכנית בקרה שוטפת?',
+    'האם הוצגה תכנית הבקרה להנהלה?',
+    'האם שויכו משימות לבעלי תפקיד?',
+    'האם בוצעו המשימות בתכנית הבקרה?',
+    'האם התקבלו ממצאי הבקרה?',
+    'האם הוצגו ממצאי הבקרה להנהלה?',
+    'האם הוצעה תכנית לתיקון ליקויים?',
+    'האם קיים נוהל לטיפול בפניות בתחום פרטיות?',
+  ],
+  '6': [
+    'האם מטרת המאגר היא סחר במידע או דיוור ישיר?',
+    'האם בעל השליטה הוא גוף ציבורי?',
+    'האם הוגשה בקשת רישום לרשות?',
+    'האם יש מעל 100,000 אנשים עם מידע רגיש?',
+    'אם כן - האם הוגשה הודעה לרשות?',
+  ],
+  '7': [
+    'האם פנייה בדיוור ישיר מכילה כל הפרטים הנדרשים?',
+    'האם פניות למחיקת מידע מדיוור מטופלות?',
+    'האם קיים מנגנון לדרישת אי-מסירה לצד שלישי?',
+  ],
+  '8': [
+    'האם נבנתה תכנית הדרכה לעובדים?',
+    'האם עובדים חדשים עוברים הדרכה לפני קבלת גישה?',
+    'האם קבועה הדרכה תקופתית (שנתיים)?',
+    'האם ההדרכות בוצעו כנדרש?',
+    'האם המדריך בעל הכשרה מתאימה?',
+    'האם ההדרכה כוללת איסור שימוש במידע למטרות אחרות?',
+  ],
+  '9': [
+    'האם קיים נוהל טיפול בפניות נושאי מידע?',
+    'האם פניות מטופלות בתוך 30 יום?',
+    'האם מתועדות כל הפניות ותוצאותיהן?',
+  ],
+  '10': [
+    'האם הדירקטוריון מפקח על מדיניות השימוש במידע?',
+    'האם הדירקטוריון מעורב בפיקוח על תקנות אבטחת מידע?',
+    'האם הדירקטוריון אישר נוהל אבטחת מידע?',
+    'האם הדירקטוריון דן בתוצאות סקר סיכונים?',
+    'האם מתקיים דיון רבעוני/שנתי על אירועי אבטחה?',
+    'האם הדירקטוריון דן בתוצאות ביקורת תקופתית?',
+  ],
+};
+
+// ===================================================================
+// ROUTER & RENDER
+// ===================================================================
+function navigate(route, param) {
+  S.route = route; S.routeParam = param || null;
+  render(); window.scrollTo(0, 0); updateNav();
+}
+
+function updateNav() {
+  const nav = document.getElementById('navLinks');
+  if (!S.activeClient) { nav.innerHTML = ''; return; }
+  nav.innerHTML = `<a class="${S.route==='dashboard'?'active':''}" onclick="navigate('dashboard')">דשבורד</a><a class="${S.route==='dpo_zone'?'active':''}" onclick="navigate('dpo_zone')">שגרת DPO</a>`;
+  updateClientBtn();
+}
+
+function updateClientBtn() {
+  const c = C();
+  document.getElementById('cAvt').textContent = c ? c.name.charAt(0) : '+';
+  document.getElementById('cName').textContent = c ? c.name : 'בחר / הוסף לקוח';
+}
+
+function toggleDD() {
+  const dd = document.getElementById('clientDD');
+  dd.classList.toggle('open');
+  renderClientDD();
+}
+
+function renderClientDD() {
+  const dd = document.getElementById('clientDD');
+  const ids = Object.keys(S.clients);
+  dd.innerHTML = ids.map(id => {
+    const c = S.clients[id];
+    return `<div class="client-dd-item ${S.activeClient===id?'active':''}" onclick="selectClient('${id}')"><div class="avt">${c.name.charAt(0)}</div><div style="flex:1"><div style="font-weight:600">${c.name}</div><div style="font-size:11px;color:var(--tx-s)">${c.type==='nonprofit'?'עמותה':c.type==='company'?'חברה':'גוף ציבורי'}</div></div>${S.activeClient===id?'<span style="color:var(--gold);font-size:11px;font-weight:700">פעיל</span>':''}</div>`;
+  }).join('') + `<div class="client-dd-add" onclick="navigate('new_client')">➕ הוסף לקוח חדש</div>`;
+}
+
+function selectClient(id) {
+  S.activeClient = id; save();
+  document.getElementById('clientDD').classList.remove('open');
+  navigate('dashboard');
+}
+
+function render() {
+  const app = document.getElementById('app');
+  const r = S.route;
+  if (!S.activeClient && r !== 'new_client') { renderHome(app); return; }
+  if (r === 'home') { renderHome(app); return; }
+  if (r === 'new_client') { renderNewClient(app); return; }
+  if (r === 'dashboard') { renderDashboard(app); return; }
+  if (r === 'dpo_zone') { renderDpoZone(app); return; }
+  if (r === 'edit_db') { renderEditDb(app); return; }
+  // Module
+  renderModule(app, r);
+}
+
+// ===================================================================
+// HOME (no client selected)
+// ===================================================================
+function renderHome(app) {
+  const ids = Object.keys(S.clients);
+  app.innerHTML = `<div class="welcome">
+    <h1>🐝 DataBee</h1>
+    <p>פלטפורמת הסדרת פרטיות לארגונים ישראליים<br>בחר לקוח קיים או הוסף חדש כדי להתחיל</p>
+    ${ids.length ? `<div style="display:grid;gap:12px;margin-bottom:24px;text-align:right">${ids.map(id => {
+      const c = S.clients[id]; const done = TASKS.filter(t => c.tasks[t.id]==='done').length;
+      return `<div class="card" style="padding:20px;cursor:pointer;display:flex;align-items:center;gap:14px" onclick="selectClient('${id}')">
+        <div class="avt" style="width:44px;height:44px;font-size:18px">${c.name.charAt(0)}</div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:700">${c.name}</div><div style="font-size:13px;color:var(--tx-m)">${c.db.name||'טרם הוגדר מאגר'} · ${done}/${TASKS.length} משימות</div></div>
+        <button class="btn btn-err btn-sm" onclick="event.stopPropagation();if(confirm('למחוק את ${c.name}?')){deleteClient('${id}');render();}">מחק</button>
+      </div>`;
+    }).join('')}</div>` : ''}
+    <button class="btn btn-p" style="font-size:16px;padding:14px 32px" onclick="navigate('new_client')">➕ הוסף לקוח חדש</button>
+  </div>`;
+  updateNav();
+}
+
+// ===================================================================
+// NEW CLIENT
+// ===================================================================
+function renderNewClient(app) {
+  app.innerHTML = `<div class="welcome">
+    <h1>לקוח חדש</h1>
+    <p>הזן את פרטי הארגון. תוכל תמיד לערוך בהמשך.</p>
+    <div class="card">
+      <h2>פרטי הארגון</h2>
+      <div class="form-row"><label class="form-label">שם הארגון *</label><input class="form-input" id="nc-name" placeholder="לדוגמה: עמותת אחוות תורה"></div>
+      <div class="form-row"><label class="form-label">סוג</label><select class="form-input form-select" id="nc-type"><option value="nonprofit">עמותה</option><option value="company">חברה</option><option value="public">גוף ציבורי</option></select></div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="btn btn-p" onclick="createClient()">צור והתחל</button>
+        <button class="btn btn-g" onclick="navigate('home')">ביטול</button>
+      </div>
+    </div>
+  </div>`;
+  updateNav();
+}
+
+function createClient() {
+  const name = document.getElementById('nc-name').value.trim();
+  if (!name) { alert('יש להזין שם ארגון'); return; }
+  const type = document.getElementById('nc-type').value;
+  newClient(name, type);
+  navigate('dashboard');
+}
+
+// ===================================================================
+// DASHBOARD
+// ===================================================================
+function renderDashboard(app) {
+  const c = C(); if (!c) { renderHome(app); return; }
+  const db = c.db;
+  db.securityLevel = calcSecurity(db);
+  const total = TASKS.length;
+  const done = TASKS.filter(t => c.tasks[t.id]==='done').length;
+  const score = total ? Math.round((done/total)*100) : 0;
+  const circ = 2*Math.PI*34;
+  const off = circ-(score/100)*circ;
+  const hasDb = db.name && db.dataTypes.length > 0;
+
+  app.innerHTML = `<div class="dash">
+    <div class="dash-hero">
+      <div class="dash-hero-row">
+        <div>
+          <h1>${c.name}</h1>
+          <p>${hasDb ? `מאגר "${db.name}" · רמה ${secLabel(db.securityLevel)} · ${db.subjectsCount.toLocaleString()} נושאי מידע` : 'טרם הוגדר מאגר מידע - התחל ממסמך הגדרות מאגר'}</p>
+        </div>
+        <div class="score-ring">
+          <svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="34"/><circle class="fg" cx="40" cy="40" r="34" stroke-dasharray="${circ}" stroke-dashoffset="${off}"/><text class="val" x="40" y="40">${score}%</text></svg>
+          <div class="score-label">ציון תאימות</div>
+        </div>
+      </div>
+    </div>
+
+    ${hasDb ? `<div class="stat-row">
+      <div class="stat-card"><div class="stat-card-label">נושאי מידע</div><div class="stat-card-val">${db.subjectsCount.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-card-label">ספקים</div><div class="stat-card-val">${db.vendors.length}</div><div class="stat-card-sub">${db.vendors.map(v=>v.name).join(', ')||'—'}</div></div>
+      <div class="stat-card"><div class="stat-card-label">משימות פתוחות</div><div class="stat-card-val">${total-done}</div></div>
+      <div class="stat-card"><div class="stat-card-label">רמת אבטחה</div><div class="stat-card-val" style="color:var(--gold-d)">${secLabel(db.securityLevel)}</div></div>
+    </div>
+    <div style="margin-bottom:18px"><button class="btn btn-g btn-sm" onclick="navigate('edit_db')">✏️ ערוך פרטי מאגר</button> <button class="btn btn-g btn-sm" onclick="navigate('dpo_zone')">📋 שגרת DPO</button></div>` : `
+    <div class="card" style="text-align:center;padding:40px;margin-bottom:28px">
+      <div style="font-size:40px;margin-bottom:12px">📋</div>
+      <h2 style="margin-bottom:8px">הגדר את מאגר המידע הראשון</h2>
+      <p style="color:var(--tx-m);margin-bottom:16px">כדי להתחיל בתהליך ההסדרה, יש להגדיר קודם את פרטי מאגר המידע של הארגון.</p>
+      <button class="btn btn-p" style="font-size:16px" onclick="navigate('edit_db')">התחל הגדרת מאגר</button>
+    </div>`}
+
+    <div class="section-head"><h2>משימות הסדרה</h2><div class="badge">${done}/${total}</div></div>
+    <div class="tasks-grid">${TASKS.map(t => taskCard(t, c)).join('')}</div>
+  </div>`;
+}
+
+function taskCard(t, c) {
+  const st = c.tasks[t.id]||'open';
+  const pc = t.pri==='high'?'b-hi':t.pri==='medium'?'b-md':'b-lo';
+  const pl = t.pri==='high'?'גבוהה':t.pri==='medium'?'בינונית':'נמוכה';
+  return `<div class="task-card ${st}" onclick="navigate('${t.id}')">
+    <div class="task-card-header"><div class="task-icon ${t.type==='deep'?'deep':'simple'}">${t.icon}</div><div><div class="task-card-title">${t.title}</div><div class="task-card-subtitle">${t.sub}</div></div></div>
+    <div class="task-card-desc">${t.desc}</div>
+    <div class="task-card-footer"><span class="task-badge ${pc}">עדיפות ${pl}</span><span class="task-badge b-ref">${t.ref}</span>${t.type==='deep'?'<span class="task-badge b-deep">מודול מלא</span>':''}</div>
+  </div>`;
+}
+
+// ===================================================================
+// EDIT DB (editable data asset form)
+// ===================================================================
+const DATA_TYPE_OPTIONS = [
+  {v:'identity',l:'פרטי זיהוי (שם, ת"ז)',s:false},{v:'contact',l:'פרטי קשר',s:false},{v:'demographic',l:'דמוגרפיה',s:false},
+  {v:'occupation',l:'עיסוק/תפקיד',s:false},{v:'behavioral',l:'מידע התנהגותי',s:false},{v:'location',l:'נתוני מיקום',s:true},
+  {v:'medical',l:'רפואי/נפשי',s:true},{v:'political',l:'פוליטי',s:true},{v:'religious',l:'דתי/השקפתי',s:true},
+  {v:'sexual',l:'צנעת חיים',s:true},{v:'criminal',l:'עבר פלילי',s:true},{v:'biometric',l:'ביומטרי',s:true},
+  {v:'financial',l:'כלכלי',s:true},{v:'genetic',l:'גנטי',s:true},{v:'consumption',l:'הרגלי צריכה',s:true},
+];
+const PURPOSE_OPTIONS = [{v:'marketing',l:'דיוור ושיווק'},{v:'service',l:'מתן שירות'},{v:'management',l:'ניהול הארגון'},{v:'research',l:'מחקר'},{v:'events',l:'אירועים'},{v:'fundraising',l:'גיוס תרומות'},{v:'recruitment',l:'גיוס עובדים'},{v:'hr',l:'משאבי אנוש'},{v:'security',l:'אבטחה'},{v:'legal',l:'דרישות חוק'},{v:'content',l:'הפצת תוכן'}];
+const COLLECTION_OPTIONS = [{v:'website',l:'אתר אינטרנט'},{v:'events',l:'אירועים'},{v:'phone',l:'טלפון'},{v:'whatsapp',l:'וואטסאפ'},{v:'social',l:'רשתות חברתיות'},{v:'thirdParty',l:'צדדים שלישיים'},{v:'cookies',l:'Cookies'},{v:'paper',l:'טפסים פיזיים'},{v:'email',l:'מייל'}];
+const SUBJECT_OPTIONS = [{v:'employees',l:'עובדים'},{v:'suppliers',l:'ספקים'},{v:'customers',l:'לקוחות'},{v:'leads',l:'מתעניינים'},{v:'members',l:'חברים'},{v:'donors',l:'תורמים'},{v:'children',l:'קטינים'},{v:'volunteers',l:'מתנדבים'},{v:'public',l:'ציבור'}];
+
+function renderEditDb(app) {
+  const c = C(); if(!c) return;
+  const db = c.db;
+  app.innerHTML = `<div style="max-width:800px;margin:0 auto;padding:32px 40px 60px">
+    <button class="mod-back" onclick="navigate('dashboard')">← חזרה לדשבורד</button>
+    <h1 style="font-size:24px;font-weight:800;color:var(--navy);margin-bottom:6px">הגדרות מאגר מידע</h1>
+    <p style="font-size:14px;color:var(--tx-m);margin-bottom:28px">הזן או ערוך את פרטי המאגר. כל שינוי נשמר אוטומטית.</p>
+
+    <div class="mod-section">
+      <h3>📋 פרטים בסיסיים</h3>
+      <div class="edit-field"><label>שם המאגר</label><input id="db-name" value="${db.name}" onchange="updDb('name',this.value)" placeholder="לדוגמה: אוהדים ומתעניינים"></div>
+      <div class="edit-field"><label>נושאי מידע</label><input type="number" id="db-subjects" value="${db.subjectsCount||''}" onchange="updDb('subjectsCount',+this.value)" placeholder="מספר אנשים"></div>
+      <div class="edit-field"><label>מורשי גישה</label><input type="number" id="db-perms" value="${db.permissionsCount||''}" onchange="updDb('permissionsCount',+this.value)" placeholder="מספר מורשים"></div>
+      <div class="edit-field"><label>העברה לחו"ל</label><select onchange="updDb('transferAbroad',this.value==='true')"><option value="" ${db.transferAbroad===null?'selected':''}>בחר</option><option value="true" ${db.transferAbroad===true?'selected':''}>כן</option><option value="false" ${db.transferAbroad===false?'selected':''}>לא</option></select></div>
+    </div>
+
+    <div class="mod-section">
+      <h3>👥 קטגוריות נושאי מידע</h3>
+      <div class="chips-wrap">${SUBJECT_OPTIONS.map(o => `<span class="chip ${db.subjectCategories.includes(o.v)?'on':''}" onclick="togChip('subjectCategories','${o.v}')">${o.l}</span>`).join('')}</div>
+    </div>
+
+    <div class="mod-section">
+      <h3>🎯 מטרות שימוש</h3>
+      <div class="chips-wrap">${PURPOSE_OPTIONS.map(o => `<span class="chip ${db.purpose.includes(o.v)?'on':''}" onclick="togChip('purpose','${o.v}')">${o.l}</span>`).join('')}</div>
+    </div>
+
+    <div class="mod-section">
+      <h3>📥 שיטות איסוף</h3>
+      <div class="chips-wrap">${COLLECTION_OPTIONS.map(o => `<span class="chip ${db.collectionMethods.includes(o.v)?'on':''}" onclick="togChip('collectionMethods','${o.v}')">${o.l}</span>`).join('')}</div>
+    </div>
+
+    <div class="mod-section">
+      <h3>🔐 סוגי מידע</h3>
+      <p style="font-size:13px;color:var(--tx-m)">פריטים בצהוב = מידע בעל רגישות מיוחדת</p>
+      <div class="chips-wrap">${DATA_TYPE_OPTIONS.map(o => `<span class="chip ${o.s?'sensitive':''} ${db.dataTypes.includes(o.v)?'on':''}" onclick="togDataType('${o.v}',${o.s})">${o.l}${o.s?' ⚠':''}</span>`).join('')}</div>
+    </div>
+
+    <div class="mod-section">
+      <h3>🏢 ספקים חיצוניים</h3>
+      <div id="vendorList">${db.vendors.map((v,i) => vendorRow(i,v)).join('')}</div>
+      <button class="btn btn-g btn-sm" style="margin-top:8px" onclick="addVendor()">+ הוסף ספק</button>
+    </div>
+
+    <div class="mod-section">
+      <h3>👤 מנהל המאגר</h3>
+      <div class="edit-field"><label>שם מלא</label><input value="${db.managerName}" onchange="updDb('managerName',this.value)" placeholder="שם מלא"></div>
+      <div class="edit-field"><label>תפקיד</label><input value="${db.managerRole}" onchange="updDb('managerRole',this.value)" placeholder="סמנכ״ל, מנכ״ל..."></div>
+      <div class="edit-field"><label>אימייל</label><input value="${db.managerEmail}" onchange="updDb('managerEmail',this.value)" placeholder="email@org.co.il"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-p" onclick="navigate('dashboard')">שמור וחזור לדשבורד</button>
+    </div>
+  </div>`;
+}
+
+function updDb(key, val) { const c=C(); if(!c) return; c.db[key]=val; c.db.securityLevel=calcSecurity(c.db); save(); }
+function togChip(field, val) { const c=C(); if(!c) return; const arr=c.db[field]; const i=arr.indexOf(val); if(i===-1) arr.push(val); else arr.splice(i,1); save(); render(); }
+function togDataType(val, isSensitive) {
+  const c=C(); if(!c) return;
+  const dt=c.db.dataTypes; const st=c.db.sensitiveTypes;
+  const i=dt.indexOf(val); if(i===-1){dt.push(val);if(isSensitive)st.push(val);} else{dt.splice(i,1);const si=st.indexOf(val);if(si!==-1)st.splice(si,1);}
+  c.db.securityLevel=calcSecurity(c.db); save(); render();
+}
+function vendorRow(i,v) { return `<div class="edit-field"><label>ספק ${i+1}</label><input value="${v.name}" onchange="updVendor(${i},'name',this.value)" placeholder="שם" style="flex:1"><input value="${v.activity}" onchange="updVendor(${i},'activity',this.value)" placeholder="פעילות" style="flex:1"><button class="btn-err btn" style="padding:4px 8px" onclick="rmVendor(${i})">✕</button></div>`; }
+function addVendor() { const c=C(); if(!c) return; c.db.vendors.push({name:'',activity:''}); save(); render(); }
+function updVendor(i,k,v) { const c=C(); if(!c) return; c.db.vendors[i][k]=v; save(); }
+function rmVendor(i) { const c=C(); if(!c) return; c.db.vendors.splice(i,1); save(); render(); }
+
+// ===================================================================
+// DPO ZONE
+// ===================================================================
+function renderDpoZone(app) {
+  const c = C(); if(!c) return;
+  const sheets = Object.entries(DPO_QS);
+
+  app.innerHTML = `<div style="max-width:1000px;margin:0 auto;padding:32px 40px 60px">
+    <button class="mod-back" onclick="navigate('dashboard')">← חזרה לדשבורד</button>
+    <div class="mod-title-row"><div class="mod-title-icon">📋</div><div class="mod-title">שגרת DPO - ${c.name}</div></div>
+    <div class="mod-subtitle">כלי עזר לניהול משימות הממונה על הגנת הפרטיות. שאלות שכבר טופלו במודולים יסומנו אוטומטית.</div>
+
+    ${sheets.map(([sheetId, questions]) => {
+      const task = TASKS.find(t => t.dpoSheet === sheetId);
+      const taskDone = task && c.tasks[task.id] === 'done';
+      const sheetLabels = {'1':'יידוע נושאי מידע','2':'הסכמה','3':'צמידות מטרה וצמצום מידע','4':'אבטחת מידע','4.1':'סעיפי חובה מסמך הגדרות מאגר','5':'בקרה שוטפת','6':'רישום והודעה','7':'דיוור ישיר','8':'הדרכת עובדים','9':'טיפול בפניות','10':'אחריות דירקטוריון'};
+      return `
+      <div class="dpo-zone">
+        <h3>${sheetLabels[sheetId]||sheetId} <span>${sheetId}</span> ${task ? `<button class="btn btn-g btn-sm" style="margin-right:auto" onclick="navigate('${task.id}')">פתח מודול →</button>` : ''}</h3>
+        ${questions.map((q, qi) => {
+          const qKey = `${sheetId}_${qi}`;
+          const autoFilled = taskDone;
+          const val = c.dpoAssessment[qKey] || (autoFilled ? 'done' : '');
+          return `<div class="dpo-q ${autoFilled?'auto-filled':''}">
+            <div class="dpo-q-text ${autoFilled?'auto':''}">
+              ${autoFilled?'✅ ':''}${q}
+            </div>
+            <select onchange="updDpo('${qKey}',this.value)" ${autoFilled?'disabled':''}>
+              <option value="" ${!val?'selected':''}>—</option>
+              <option value="done" ${val==='done'?'selected':''}>✅ בוצע</option>
+              <option value="partial" ${val==='partial'?'selected':''}>⚠️ חלקי</option>
+              <option value="no" ${val==='no'?'selected':''}>❌ לא</option>
+              <option value="na" ${val==='na'?'selected':''}>לא רלוונטי</option>
+            </select>
+            <input type="date" value="${c.dpoAssessment[qKey+'_date']||''}" onchange="updDpo('${qKey}_date',this.value)" placeholder="תאריך">
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function updDpo(key, val) { const c=C(); if(!c) return; c.dpoAssessment[key]=val; save(); }
+
+// ===================================================================
+// MODULE ROUTER
+// ===================================================================
+function renderModule(app, moduleId) {
+  const c = C(); if(!c) { renderHome(app); return; }
+  const task = TASKS.find(t=>t.id===moduleId);
+  if(!task) { renderDashboard(app); return; }
+  if(!c.tasks[moduleId]||c.tasks[moduleId]==='open') { c.tasks[moduleId]='in-progress'; save(); }
+
+  // Deep modules
+  if(moduleId==='db_definition') { navigate('edit_db'); return; }
+  if(moduleId==='privacy_policy') { renderPrivacyPolicy(app,task); return; }
+  if(moduleId==='consent_mechanism') { renderConsent(app,task); return; }
+  if(moduleId==='dpa_vendors') { renderDpa(app,task); return; }
+  if(moduleId==='data_minimization') { renderMinimization(app,task); return; }
+
+  // Simple modules
+  renderSimple(app, task);
+}
+
+function markDone(id) { const c=C(); if(!c) return; c.tasks[id]='done'; save(); }
+function markOpen(id) { const c=C(); if(!c) return; c.tasks[id]='open'; save(); render(); }
+
+// ===================================================================
+// SIMPLE MODULE
+// ===================================================================
+const SIMPLE_CONTENT = {
+  dsr_mechanism: { content: 'סעיפים 13-14 לחוק מעניקים <strong>זכות עיון, תיקון ומחיקה</strong>. חובה להקים מנגנון ומענה בתוך <strong>30 יום</strong>.', checks: ['הקמת תיבת דואר/טופס ייעודי','נוהל טיפול תוך 30 יום','תיעוד כל פנייה','הדרכת עובדים'] },
+  unsubscribe: { content: 'סעיף 30א לחוק התקשורת - <strong>קישור הסרה</strong> בכל דיוור. הפרה = <strong>1,000 ₪ פיצוי</strong> ללא הוכחת נזק.', checks: ['קישור הסרה בכל דיוור','רשימת הסרות ממוחשבת','סנכרון מול כל הערוצים'] },
+  transfer_abroad: { content: 'תקנות העברת מידע לחו"ל - מחייבות <strong>בסיס משפטי</strong>: הסכמה מפורשת, מדינה עם הגנה מקבילה, או הסכם מחייב.', checks: ['מיפוי ספקים עם אחסון בחו"ל','בדיקת בסיס משפטי','עדכון מדיניות פרטיות'] },
+  security_policy: { content: 'תקנה 4 - <strong>נוהל אבטחה ארגוני</strong>: אבטחה פיזית, הרשאות, זיהוי ואימות, התקנים ניידים, אירועי אבטחה, ביקורות, גיבויים.', checks: ['כתיבת נוהל אבטחה','אישור הנהלה','הפצה למורשים','עדכון שנתי'] },
+  logging: { content: 'תקנה 10 - <strong>תיעוד אוטומטי</strong> של גישה: זהות, תאריך, רכיב, סוג גישה. שמירה <strong>24 חודשים</strong>.', checks: ['בחירת מערכת logging','הגדרת שדות','שמירה 24 חודשים','נוהל בדיקה'] },
+  training: { content: 'תקנה 7 - <strong>הדרכה לבעלי הרשאות</strong> לפני מתן גישה. רמה בינונית/גבוהה: <strong>כל שנתיים</strong>.', checks: ['הכנת חומרי הדרכה','קביעת תדירות','תיעוד הדרכות','הדרכת מורשים חדשים'] },
+  system_mapping: { content: 'תקנה 5 - <strong>מסמך מעודכן</strong> של חומרה, תוכנה, ממשקים, תרשים רשת. עדכון בכל שינוי.', checks: ['רשימת חומרה','רשימת תוכנות','תרשים רשת','עדכון בשינוי'] },
+  annual_review: { content: 'תקנה 2(ג) - בחינה <strong>שנתית</strong> אם המידע אינו רב מהנדרש. הרשות ממליצה גם בתדירות גבוהה יותר למידע רגיש.', checks: ['קביעת תאריך','זיהוי מידע עודף','מחיקה/אנונימיזציה','תיעוד'] },
+  audits: { content: 'תקנה 16 - <strong>ביקורת פנימית/חיצונית</strong> כל 24 חודשים ע"י גורם מוסמך.', checks: ['בחירת מבקר','ביצוע ביקורת','דיון בממצאים','תיקון ליקויים'] },
+  registration: { content: 'אחרי תיקון 13, חובת רישום חלה רק על <strong>גופים ציבוריים</strong> ו<strong>סוחרי מידע/דיוור ישיר</strong>. יש לבדוק חובת הודעה אם יש מעל 100K אנשים עם מידע רגיש.', checks: ['בדיקת חובת רישום','בדיקת חובת הודעה','הגשת בקשה אם נדרש'] },
+  board_oversight: { content: 'הנחיית הרשות 1/2022 - <strong>פיקוח דירקטוריון</strong> על מדיניות השימוש במידע, אישור נוהל אבטחה, דיון באירועי אבטחה, ביקורת תקופתית.', checks: ['פיקוח על מדיניות','אישור נוהל אבטחה','דיון רבעוני/שנתי','דיון בביקורת'] },
+};
+
+function renderSimple(app, task) {
+  const c=C(); const st=c.tasks[task.id]||'open'; const isDone=st==='done';
+  const sc = SIMPLE_CONTENT[task.id] || { content: 'תוכן בהכנה', checks: [] };
+  app.innerHTML = `<div class="mod-layout"><div class="mod-main">
+    <button class="mod-back" onclick="navigate('dashboard')">← חזרה לדשבורד</button>
+    <div class="mod-title-row"><div class="mod-title-icon">${task.icon}</div><div class="mod-title">${task.title}</div></div>
+    <div class="mod-subtitle">${task.sub} · ${task.desc}</div>
+    <div class="mod-section"><h3>📖 מה נדרש?</h3><p>${sc.content}</p></div>
+    <div class="mod-section"><h3>✅ צ'קליסט</h3>${sc.checks.map(ch => `<label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:14px"><input type="checkbox" style="width:18px;height:18px;accent-color:var(--navy)">${ch}</label>`).join('')}</div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn ${isDone?'btn-ok':'btn-p'}" onclick="markDone('${task.id}');navigate('dashboard')">${isDone?'✓ הושלם':'סמן כהושלם'}</button>
+      ${isDone?`<button class="btn btn-g" onclick="markOpen('${task.id}')">פתח מחדש</button>`:''}
+      <button class="btn btn-g" onclick="navigate('dashboard')">חזור</button>
+    </div>
+  </div>${sidebar(task)}</div>`;
+}
+
+// ===================================================================
+// DEEP MODULES (privacy policy, consent, DPA, minimization)
+// ===================================================================
+function renderPrivacyPolicy(app, task) {
+  const c=C(); const db=c.db;
+  const pLabels={marketing:'דיוור ישיר',service:'מתן שירות',management:'ניהול הארגון',research:'מחקר',events:'ניהול אירועים',fundraising:'גיוס תרומות',recruitment:'גיוס עובדים',hr:'משאבי אנוש',security:'אבטחה',legal:'עמידה בחוק',content:'הפצת תוכן'};
+  const dLabels={identity:'פרטי זיהוי',contact:'פרטי קשר',demographic:'דמוגרפיה',occupation:'עיסוק',behavioral:'מידע התנהגותי',religious:'אמונות דתיות',medical:'מידע רפואי',political:'דעות פוליטיות',financial:'מצב כלכלי',criminal:'עבר פלילי',biometric:'ביומטרי',genetic:'גנטי',consumption:'הרגלי צריכה',sexual:'צנעת חיים',location:'מיקום'};
+  const cLabels={website:'טפסים באתר',events:'רישום באירועים',phone:'שיחות טלפון',whatsapp:'וואטסאפ',social:'רשתות חברתיות',thirdParty:'צדדים שלישיים',cookies:'Cookies',paper:'טפסים פיזיים',email:'מייל'};
+
+  app.innerHTML = `<div class="mod-layout"><div class="mod-main">
+    <button class="mod-back" onclick="navigate('dashboard')">← חזרה</button>
+    <div class="mod-title-row"><div class="mod-title-icon">${task.icon}</div><div class="mod-title">${task.title}</div></div>
+    <div class="mod-subtitle">טיוטה שנוצרה מנתוני המאגר. ניתן לערוך את נתוני המאגר בכל עת.</div>
+    <div class="dpo-banner"><div class="dpo-banner-icon">⚖️</div><div class="dpo-banner-text"><div class="dpo-banner-title">טיוטה - דורש אישור DPO</div><div class="dpo-banner-desc">יש לאשר עם DPO לפני פרסום.</div></div><button class="btn btn-gold btn-sm">שלח ל-DPO</button></div>
+
+    <div class="doc-preview draft">
+      <h4>מדיניות פרטיות - ${c.name}</h4>
+      <p><strong>עדכון:</strong> ${new Date().toLocaleDateString('he-IL')}</p>
+      <p>${c.name} מכבדת את פרטיות המשתמשים ומחויבת להגנה על המידע האישי, בהתאם לחוק הגנת הפרטיות, התשמ"א-1981 ותקנות אבטחת מידע, התשע"ז-2017.</p>
+      <h4>1. מידע שאנו אוספים</h4>
+      <ul>${db.dataTypes.map(t=>`<li><strong>${dLabels[t]||t}</strong>${db.sensitiveTypes.includes(t)?' (רגיש)':''}</li>`).join('')||'<li>טרם הוגדר</li>'}</ul>
+      <h4>2. מטרות השימוש</h4>
+      <ul>${db.purpose.map(p=>`<li>${pLabels[p]||p}</li>`).join('')||'<li>טרם הוגדר</li>'}</ul>
+      <h4>3. אופן האיסוף</h4>
+      <p>${db.collectionMethods.map(m=>cLabels[m]||m).join(', ')||'טרם הוגדר'}</p>
+      <h4>4. העברה לצדדים שלישיים</h4>
+      <p>${db.vendors.length?db.vendors.map(v=>v.name).join(', '):'לא מועבר לצדדים שלישיים'}</p>
+      ${db.transferAbroad?'<p><strong>העברה לחו"ל:</strong> חלק מהמידע מעובד מחוץ לישראל.</p>':''}
+      <h4>5. זכויות נושא המידע</h4>
+      <ul><li>זכות עיון (סעיף 13)</li><li>זכות תיקון (סעיף 14)</li><li>זכות מחיקה</li><li>זכות הסרה מדיוור</li></ul>
+      <p>פניות: ${db.managerName||'[שם מנהל]'}, ${db.managerEmail||'[אימייל]'}</p>
+      <h4>6. אבטחת מידע</h4>
+      <p>רמת אבטחה: <strong>${secLabel(calcSecurity(db))}</strong></p>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-p" onclick="markDone('privacy_policy');navigate('dashboard')">אשר</button>
+      <button class="btn btn-g" onclick="navigate('edit_db')">ערוך נתוני מאגר</button>
+      ${c.tasks.privacy_policy==='done'?`<button class="btn btn-g" onclick="markOpen('privacy_policy')">פתח מחדש</button>`:''}
+    </div>
+  </div>${sidebar(task)}</div>`;
+}
+
+function renderConsent(app, task) {
+  const c=C(); const db=c.db;
+  const hasMark = db.purpose.includes('marketing');
+  app.innerHTML = `<div class="mod-layout"><div class="mod-main">
+    <button class="mod-back" onclick="navigate('dashboard')">← חזרה</button>
+    <div class="mod-title-row"><div class="mod-title-icon">${task.icon}</div><div class="mod-title">${task.title}</div></div>
+    <div class="mod-subtitle">מנגנוני הסכמה מותאמים לנקודות האיסוף שלך. ניתן לערוך נתוני מאגר בכל עת.</div>
+    <div class="dpo-banner"><div class="dpo-banner-icon">⚖️</div><div class="dpo-banner-text"><div class="dpo-banner-title">דורש אישור DPO</div><div class="dpo-banner-desc">ניסוחים בטיוטה. יש לאשר לפני הטמעה.</div></div></div>
+
+    ${db.collectionMethods.includes('website')?`<div class="mod-section"><h3>🌐 טופס באתר</h3><p>הוסף <strong>מתחת לכפתור השליחה</strong>:</p>
+      <div class="consent-preview"><div class="form-mock">שם: _____ | אימייל: _____ | טלפון: _____</div>
+        <label><input type="checkbox">קראתי ואני מסכים/ה ל<a href="#" style="color:var(--gold-d)">מדיניות הפרטיות</a> של ${c.name}.</label>
+        ${hasMark?'<label><input type="checkbox">אני מסכים/ה לקבל דברי פרסומת ודיוור ישיר. ניתן להסרה בכל עת.</label>':''}
+      </div><p style="font-size:13px;color:var(--tx-m)">צ\'קבוקס פרטיות = חובה. צ\'קבוקס דיוור = אופציונלי (opt-in בלבד).</p></div>`:''}
+
+    ${db.collectionMethods.includes('events')?`<div class="mod-section"><h3>🎫 רישום לאירועים</h3>
+      <div class="consent-preview"><label><input type="checkbox">אני מאשר/ת ל${c.name} לשמור פרטיי לצורך ניהול האירוע.</label>
+      ${hasMark?'<label><input type="checkbox">מעוניין/ת לקבל עדכונים גם לאחר האירוע.</label>':''}</div></div>`:''}
+
+    ${db.collectionMethods.includes('whatsapp')?`<div class="mod-section"><h3>💬 וואטסאפ</h3><p>הודעה אוטומטית ראשונה:</p>
+      <div class="consent-preview" style="background:#E8F5E1;border-color:#4ade80"><p style="font-size:14px;margin:0">👋 שלום! פרטי ההתכתבות נשמרים לצורך מתן שירות. 📋 <a href="#">מדיניות פרטיות</a><br>שלח/י "מסכים/ה" להמשך ✅</p></div></div>`:''}
+
+    ${db.collectionMethods.includes('social')?`<div class="mod-section"><h3>📱 רשתות חברתיות</h3>
+      <div class="consent-preview"><label><input type="checkbox">בשליחת הטופס אני מסכים/ה שפרטיי יועברו ל${c.name}. <a href="#" style="color:var(--gold-d)">מדיניות פרטיות</a></label></div></div>`:''}
+
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-p" onclick="markDone('consent_mechanism');navigate('dashboard')">אשר</button>
+      <button class="btn btn-g" onclick="navigate('edit_db')">ערוך נתונים</button>
+      ${c.tasks.consent_mechanism==='done'?`<button class="btn btn-g" onclick="markOpen('consent_mechanism')">פתח מחדש</button>`:''}
+    </div>
+  </div>${sidebar(task)}</div>`;
+}
+
+function renderDpa(app, task) {
+  const c=C(); const db=c.db;
+  app.innerHTML = `<div class="mod-layout"><div class="mod-main">
+    <button class="mod-back" onclick="navigate('dashboard')">← חזרה</button>
+    <div class="mod-title-row"><div class="mod-title-icon">${task.icon}</div><div class="mod-title">${task.title}</div></div>
+    <div class="mod-subtitle">תקנה 15 - הסכם מיקור חוץ עם כל ספק. ${db.vendors.length} ספקים זוהו.</div>
+    ${db.vendors.length?db.vendors.map((v,i)=>`<div class="mod-section"><h3>🏢 ${v.name||'ספק '+(i+1)}</h3>
+      <p><strong>פעילות:</strong> ${v.activity||'—'} | <strong>DPA:</strong> <span style="color:var(--err)">❌ חסר</span></p>
+      <p style="font-size:13px;color:var(--tx-m)">תקנה 15 מחייבת: סוג המידע, מטרות, משך, סודיות, אבטחה, דיווח שנתי.</p>
+      <button class="btn btn-p btn-sm" onclick="alert('בגרסה הבאה: יצירת DPA')">צור DPA</button></div>`).join(''):'<div class="mod-section"><p>לא זוהו ספקים. <button class="btn btn-g btn-sm" onclick="navigate(\'edit_db\')">הוסף ספקים</button></p></div>'}
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-p" onclick="markDone('dpa_vendors');navigate('dashboard')">כל ה-DPA נחתמו</button>
+      <button class="btn btn-g" onclick="navigate('edit_db')">ערוך ספקים</button>
+    </div>
+  </div>${sidebar(task)}</div>`;
+}
+
+function renderMinimization(app, task) {
+  const c=C(); const db=c.db;
+  const dLabels={identity:'פרטי זיהוי',contact:'פרטי קשר',demographic:'דמוגרפיה',occupation:'עיסוק',behavioral:'מידע התנהגותי',religious:'דתי',medical:'רפואי',political:'פוליטי',financial:'כלכלי',criminal:'פלילי',biometric:'ביומטרי',genetic:'גנטי',consumption:'צריכה',sexual:'צנעת חיים',location:'מיקום'};
+  app.innerHTML = `<div class="mod-layout"><div class="mod-main">
+    <button class="mod-back" onclick="navigate('dashboard')">← חזרה</button>
+    <div class="mod-title-row"><div class="mod-title-icon">${task.icon}</div><div class="mod-title">${task.title}</div></div>
+    <div class="mod-subtitle">תקנה 2(ג) + מדיניות צמצום מידע של הרשות. בחן אם המידע אינו רב מהנדרש.</div>
+    <div class="mod-section"><h3>📊 מידע במאגר "${db.name||'טרם הוגדר'}"</h3>
+    ${db.dataTypes.map(t=>{const s=db.sensitiveTypes.includes(t); return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:${s?'var(--warn-bg)':'var(--bg)'};border:1px solid ${s?'var(--warn)':'var(--bd)'};border-radius:10px;margin-bottom:8px">
+      <div style="flex:1;font-weight:600">${dLabels[t]||t}${s?' ⚠ רגיש':''}</div>
+      <select style="padding:6px;border:1px solid var(--bd);border-radius:6px;font-family:inherit;font-size:12px"><option>✅ נדרש</option><option>⚠️ לבחון</option><option>❌ עודף</option></select></div>`;}).join('')}
+    </div>
+    <div class="mod-section"><h3>📅 תיעוד בחינה שנתית</h3>
+      <div class="edit-field"><label>תאריך</label><input type="date" value="${new Date().toISOString().split('T')[0]}"></div>
+      <div class="edit-field"><label>מבצע</label><input placeholder="${db.managerName||'שם'}"></div>
+      <div class="edit-field"><label>מסקנות</label><textarea placeholder="אילו סוגי מידע עודפים? מה נמחק?"></textarea></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-p" onclick="markDone('data_minimization');navigate('dashboard')">תעד וסיים</button>
+      <button class="btn btn-g" onclick="navigate('edit_db')">ערוך נתונים</button>
+    </div>
+  </div>${sidebar(task)}</div>`;
+}
+
+// ===================================================================
+// SIDEBAR (shared)
+// ===================================================================
+function sidebar(task) {
+  const c=C(); const db=c?c.db:{};
+  return `<div class="mod-side">
+    <div class="side-section"><div class="side-label">פרטי מאגר</div>
+      <div class="side-card"><div class="side-card-val">${db.name||'טרם הוגדר'}</div><div class="side-card-sub">${(db.subjectsCount||0).toLocaleString()} נושאי מידע · ${db.permissionsCount||0} מורשים</div></div>
+      <div class="side-card"><div class="side-card-val" style="color:var(--gold)">רמה ${secLabel(calcSecurity(db))}</div><div class="side-card-sub">רגיש: ${db.sensitiveTypes&&db.sensitiveTypes.length?'כן':'לא'}</div></div>
+    </div>
+    <div class="side-section"><div class="side-label">מסמכים רשמיים</div>
+      <a class="side-link" href="https://www.gov.il/BlobFolder/guide/data_security_guide/he/NEW_GUIDE.pdf" target="_blank"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>מדריך תקנות אבטחת מידע</a>
+      <a class="side-link" href="https://www.nevo.co.il/law_html/law00/71631.htm" target="_blank"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>חוק הגנת הפרטיות</a>
+    </div>
+    <div class="ai-trigger" onclick="openAI('${task.id}')"><div class="ai-trigger-avatar">ע</div><div><div class="ai-trigger-name">שאל את עמית</div><div class="ai-trigger-desc">שאלות על ${task.title}</div></div></div>
+  </div>`;
+}
+
+// ===================================================================
+// AI CHAT
+// ===================================================================
+const AI_SUGS = {
+  privacy_policy:['מה חייב להיות במדיניות?','איך מנסחים סעיף זכויות?'],
+  consent_mechanism:['האם מותר לסמן צ\'קבוקס מראש?','מה ההבדל בין opt-in ל-opt-out?'],
+  dpa_vendors:['מה חייב בהסכם DPA?','Google - יש DPA סטנדרטי?'],
+  data_minimization:['כל כמה בוחנים מידע עודף?','מה הסנקציה?'],
+  dsr_mechanism:['כמה זמן למענה?','חייבים אימות זהות?'],
+  default:['מה הסנקציות על אי-עמידה?','מה תיקון 13?'],
+};
+const AI_DEMO_RESP = {
+  privacy_policy:'מדיניות פרטיות חייבת לכלול לפי סעיף 11: **מטרות**, **סוגי מידע**, **למי מועבר**, **זכויות** (עיון, תיקון, מחיקה), **פרטי קשר** מנהל המאגר.',
+  consent_mechanism:'לפי סעיפים 11-12, ההסכמה חייבת להיות **מדעת**. אסור לסמן צ\'קבוקס מראש. לדיוור - **הסכמה נפרדת**.',
+  dpa_vendors:'DPA לפי תקנה 15: **(1)** מידע שיעובד **(2)** מטרות **(3)** משך **(4)** השבת מידע **(5)** סודיות **(6)** אבטחה **(7)** דיווח שנתי.',
+  data_minimization:'תקנה 2(ג) = בדיקה שנתית. הרשות ממליצה **גם בתדירות גבוהה יותר** למידע רגיש. הפרה = סנקציות + תביעות.',
+  default:'אני עמית, יועץ הפרטיות הדיגיטלי. שאל אותי כל שאלה על חוק הגנת הפרטיות, תקנות אבטחת מידע, תיקון 13, צמצום מידע, או דיוור ישיר.',
+};
+
+function openAI(ctx) {
+  if(!S.aiMode){document.getElementById('apiModal').classList.add('on');window._pAI=ctx;return;}
+  S.aiCtx=ctx;
+  const task=TASKS.find(t=>t.id===ctx);
+  document.getElementById('aiCtxText').textContent=task?`הקשר: ${task.title}`:'הקשר כללי';
+  if(!S.aiHist[ctx]) S.aiHist[ctx]=[{role:'bot',content:`היי! שאל אותי על **${task?task.title:'הגנת פרטיות'}**.`}];
+  rAIMsgs(); rAISugs(ctx);
+  document.getElementById('aiPanel').classList.add('on');
+  document.getElementById('aiOverlay').classList.add('on');
+  setTimeout(()=>document.getElementById('aiIn').focus(),300);
+}
+function closeAI(){document.getElementById('aiPanel').classList.remove('on');document.getElementById('aiOverlay').classList.remove('on');}
+
+function rAIMsgs(){
+  const h=S.aiHist[S.aiCtx]||[];
+  document.getElementById('aiMsgs').innerHTML=h.map(m=>`<div class="ai-m ${m.role==='user'?'u':'b'}"><div class="ai-m-avt ${m.role==='user'?'u':'b'}">${m.role==='user'?'א':'ע'}</div><div class="ai-m-bub">${m.content.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div></div>`).join('');
+  const el=document.getElementById('aiMsgs');el.scrollTop=el.scrollHeight;
+}
+function rAISugs(ctx){const s=AI_SUGS[ctx]||AI_SUGS.default;document.getElementById('aiSugs').innerHTML=s.map(x=>`<button class="ai-sug" onclick="uAISug('${x.replace(/'/g,"\\'")}')">${x}</button>`).join('');}
+function uAISug(t){document.getElementById('aiIn').value=t;sendAI();}
+
+const aiInEl=document.getElementById('aiIn');
+const aiSendEl=document.getElementById('aiSendBtn');
+aiInEl.addEventListener('input',()=>{aiSendEl.disabled=!aiInEl.value.trim();aiInEl.style.height='auto';aiInEl.style.height=Math.min(aiInEl.scrollHeight,100)+'px';});
+aiInEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&aiInEl.value.trim()){e.preventDefault();sendAI();}});
+
+async function sendAI(){
+  const t=aiInEl.value.trim();if(!t)return;
+  S.aiHist[S.aiCtx].push({role:'user',content:t});rAIMsgs();
+  document.getElementById('aiSugs').innerHTML='';
+  aiInEl.value='';aiInEl.style.height='auto';aiSendEl.disabled=true;
+  const ty=document.createElement('div');ty.className='ai-m b';ty.id='ai-ty';ty.innerHTML=`<div class="ai-m-avt b">ע</div><div class="typing"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+  document.getElementById('aiMsgs').appendChild(ty);
+  let r;
+  try{
+    if(S.aiMode==='real'&&S.apiKey){
+      const c=C();const task=TASKS.find(x=>x.id===S.aiCtx);
+      const sys=`אתה "עמית" - יועץ פרטיות דיגיטלי של DataBee. ענה בעברית, קצר, השתמש ב-**מודגש**. הפנה לסעיפי חוק. הקשר: ${task?task.title:'כללי'}. ארגון: ${c?c.name:''}. מאגר: ${c?c.db.name:''}. רמת אבטחה: ${c?secLabel(calcSecurity(c.db)):''}`;
+      const msgs=S.aiHist[S.aiCtx].slice(0,-1).map(m=>({role:m.role==='bot'?'assistant':'user',content:m.content})).concat([{role:'user',content:t}]);
+      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5-20250929',max_tokens:800,system:sys,messages:msgs})});
+      if(!res.ok)throw new Error(await res.text());
+      const d=await res.json();r=d.content?.[0]?.text||'לא הצלחתי.';
+    }else{await new Promise(x=>setTimeout(x,800));r=(AI_DEMO_RESP[S.aiCtx]||AI_DEMO_RESP.default)+'\n\n*(מצב דמו)*';}
+  }catch(e){r='שגיאה. נסה שוב.';console.error(e);}
+  document.getElementById('ai-ty')?.remove();
+  S.aiHist[S.aiCtx].push({role:'bot',content:r});rAIMsgs();
+}
+
+function saveApiKey(){const k=document.getElementById('apiKeyIn').value.trim();if(!k.startsWith('sk-ant-')){alert('צריך sk-ant-...');return;}S.apiKey=k;S.aiMode='real';save();document.getElementById('apiModal').classList.remove('on');if(window._pAI){openAI(window._pAI);window._pAI=null;}}
+function useDemoMode(){S.aiMode='demo';save();document.getElementById('apiModal').classList.remove('on');if(window._pAI){openAI(window._pAI);window._pAI=null;}}
+
+// ===================================================================
+// INIT
+// ===================================================================
+load();
+render();
+
+</script>
+</body>
+</html>
