@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import MarkTaskDoneButton from "@/components/MarkTaskDoneButton";
 import { prisma } from "@/lib/prisma";
 import { findTask } from "@/lib/tasks";
 import { sourcesForModule, primarySourcesForModule } from "@/lib/legal-sources";
+import { getTaskStatus } from "@/lib/actions/tasks";
+
+export const dynamic = "force-dynamic";
 
 export default async function ModulePage({
   params,
@@ -20,6 +24,7 @@ export default async function ModulePage({
   ]);
   if (!org || !task) notFound();
 
+  const status = await getTaskStatus(org.id, task.id);
   const primary = primarySourcesForModule(task.id);
   const related = sourcesForModule(task.id).filter((s) => !s.primary);
 
@@ -56,11 +61,15 @@ export default async function ModulePage({
         </h1>
       </div>
       <p
-        className="mb-7 text-[14px] leading-relaxed"
+        className="mb-5 text-[14px] leading-relaxed"
         style={{ color: "var(--color-text-muted)" }}
       >
         {task.sub} · {task.desc}
       </p>
+
+      <div className="mb-7">
+        <MarkTaskDoneButton orgId={org.id} taskType={task.id} status={status} />
+      </div>
 
       {primary.length > 0 && (
         <section className="card mb-4">

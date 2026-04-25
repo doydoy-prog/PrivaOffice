@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { OrganizationType } from "@/lib/types";
+import { ensureOrganizationTasks } from "./tasks";
 
 const VALID_TYPES: OrganizationType[] = ["nonprofit", "company", "public"];
 
@@ -57,6 +58,8 @@ export async function createOrganization(formData: FormData): Promise<CreateOrga
   const org = await prisma.organization.create({
     data: { name, type },
   });
+
+  await ensureOrganizationTasks(org.id);
 
   revalidatePath("/");
   return { ok: true, id: org.id };

@@ -9,6 +9,7 @@ import {
   PURPOSE_OPTIONS,
   SUBJECT_OPTIONS,
 } from "@/lib/data-asset-options";
+import { ensureOrganizationTasks } from "./tasks";
 
 const SUBJECT_VALUES = new Set(SUBJECT_OPTIONS.map((o) => o.value));
 const PURPOSE_VALUES = new Set(PURPOSE_OPTIONS.map((o) => o.value));
@@ -118,6 +119,10 @@ export async function upsertDataAsset(
 ): Promise<UpsertResult> {
   const org = await prisma.organization.findUnique({ where: { id: orgId } });
   if (!org) return { ok: false, error: "ארגון לא נמצא" };
+
+  // Make sure all 16 task rows exist before the dashboard reflects them. This
+  // covers organizations created prior to step 4 of the implementation.
+  await ensureOrganizationTasks(orgId);
 
   const name = raw.name.trim();
   if (!name) return { ok: false, error: "יש להזין שם מאגר" };
