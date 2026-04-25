@@ -62,6 +62,71 @@ export async function createOrganization(formData: FormData): Promise<CreateOrga
   return { ok: true, id: org.id };
 }
 
+export interface OrganizationDashboard {
+  id: string;
+  name: string;
+  type: OrganizationType;
+  dataAsset: {
+    id: string;
+    name: string;
+    subjectsCount: number;
+    permissionsCount: number;
+    dataTypes: string[];
+    sensitiveTypes: string[];
+    securityLevel: string;
+    vendors: { name: string; activity: string | null }[];
+  } | null;
+  taskStatuses: Record<string, "open" | "in_progress" | "done">;
+}
+
+export async function getOrganizationDashboard(
+  id: string,
+): Promise<OrganizationDashboard | null> {
+  const org = await prisma.organization.findUnique({
+    where: { id },
+    include: {
+      dataAssets: {
+        orderBy: { createdAt: "asc" },
+        take: 1,
+        include: {
+          vendors: { include: { vendor: true } },
+        },
+      },
+      tasks: true,
+    },
+  });
+  if (!org) return null;
+
+  const taskStatuses: Record<string, "open" | "in_progress" | "done"> = {};
+  for (const t of org.tasks) {
+    taskStatuses[t.taskType] = t.status as "open" | "in_progress" | "done";
+  }
+
+  const primary = org.dataAssets[0] ?? null;
+
+  return {
+    id: org.id,
+    name: org.name,
+    type: org.type as OrganizationType,
+    dataAsset: primary
+      ? {
+          id: primary.id,
+          name: primary.name,
+          subjectsCount: primary.subjectsCount,
+          permissionsCount: primary.permissionsCount,
+          dataTypes: primary.dataTypes,
+          sensitiveTypes: primary.sensitiveTypes,
+          securityLevel: primary.securityLevel,
+          vendors: primary.vendors.map((v) => ({
+            name: v.vendor.name,
+            activity: v.vendor.activity,
+          })),
+        }
+      : null,
+    taskStatuses,
+  };
+}
+
 export async function deleteOrganization(id: string): Promise<void> {
   // Cascade manually: Prisma schema does not declare onDelete cascades, so we
   // remove dependents explicitly to avoid FK violations.

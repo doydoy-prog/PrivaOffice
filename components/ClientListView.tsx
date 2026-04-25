@@ -22,12 +22,6 @@ export default function ClientListView({
     });
   }
 
-  function handleSelect(_id: string) {
-    // Dashboard route is implemented in the next step — for now, surface a
-    // placeholder so the click target is not a dead link.
-    window.alert("לקוח נבחר. מסך הדשבורד יתווסף בצעד הבא של פיתוח המוצר.");
-  }
-
   return (
     <div className="mx-auto max-w-[640px] px-5 py-16 text-center">
       <h1
@@ -54,7 +48,6 @@ export default function ClientListView({
               key={org.id}
               org={org}
               disabled={pending}
-              onSelect={() => handleSelect(org.id)}
               onDelete={() => handleDelete(org.id, org.name)}
             />
           ))}
@@ -90,29 +83,25 @@ function EmptyState() {
 function ClientCard({
   org,
   disabled,
-  onSelect,
   onDelete,
 }: {
   org: OrganizationListItem;
   disabled: boolean;
-  onSelect: () => void;
   onDelete: () => void;
 }) {
   const dataAssetName = org.dataAssetName || "טרם הוגדר מאגר";
   const typeLabel = ORGANIZATION_TYPE_LABELS[org.type];
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect();
-        }
+    <Link
+      href={`/${org.id}`}
+      className="card flex items-center gap-3.5"
+      style={{
+        padding: 20,
+        opacity: disabled ? 0.6 : 1,
+        pointerEvents: disabled ? "none" : undefined,
+        textDecoration: "none",
+        color: "inherit",
       }}
-      className="card flex cursor-pointer items-center gap-3.5"
-      style={{ padding: 20, opacity: disabled ? 0.6 : 1 }}
     >
       <div className="avatar" style={{ width: 44, height: 44, fontSize: 18 }}>
         {org.name.charAt(0)}
@@ -120,7 +109,7 @@ function ClientCard({
       <div className="flex-1">
         <div className="text-[16px] font-bold">{org.name}</div>
         <div className="text-[13px]" style={{ color: "var(--color-text-muted)" }}>
-          {typeLabel} · {dataAssetName}
+          {typeLabel} · {dataAssetName} · {org.tasksDone}/16 משימות
         </div>
       </div>
       <button
@@ -128,12 +117,13 @@ function ClientCard({
         className="btn btn-danger"
         disabled={disabled}
         onClick={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           onDelete();
         }}
       >
         מחק
       </button>
-    </div>
+    </Link>
   );
 }
