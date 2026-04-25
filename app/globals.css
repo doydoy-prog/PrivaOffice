@@ -198,6 +198,55 @@ body {
   margin-top: 2px;
 }
 
+/* Chips */
+.chip {
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 12.5px;
+  cursor: pointer;
+  user-select: none;
+  border: 1.5px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.chip:hover {
+  border-color: var(--color-gold);
+  background: #fffbf2;
+}
+.chip.chip-on {
+  background: var(--color-navy);
+  color: var(--color-gold);
+  border-color: var(--color-navy);
+}
+.chip.chip-sensitive {
+  border-color: var(--color-gold);
+  color: var(--color-gold-deep);
+}
+.chip.chip-sensitive.chip-on {
+  background: var(--color-gold-deep);
+  color: #fff;
+  border-color: var(--color-gold-deep);
+}
+
+/* Inline form control reused inside fields/rows */
+.field-control {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13.5px;
+  background: #fff;
+  color: var(--color-text);
+  width: 100%;
+}
+.field-control:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+
 /* Avatar */
 .avatar {
   width: 1.75rem;
