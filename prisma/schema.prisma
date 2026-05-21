@@ -1,0 +1,298 @@
+// DataBee - Privacy Compliance Platform
+// Prisma Schema - Phase 1
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============== ENUMS ==============
+
+enum OrgType {
+  NONPROFIT      // עמותה
+  COMPANY        // חברה מסחרית
+  PUBLIC_BODY    // גוף ציבורי
+  ASSOCIATION    // אגודה / ארגון אחר
+}
+
+enum UserRole {
+  CLIENT         // לקוח - אנשי הארגון
+  DPO            // עורך דין DataBee
+  ADMIN          // צוות DataBee
+}
+
+enum SecurityLevel {
+  BASIC          // רמה בסיסית
+  MEDIUM         // רמה בינונית
+  HIGH           // רמה גבוהה
+}
+
+enum AssetStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum DocType {
+  DB_DEFINITION         // מסמך הגדרות מאגר
+  PRIVACY_POLICY        // מדיניות פרטיות
+  CONSENT_TEXT          // טקסט הסכמה
+  DPA                   // הסכם מיקור חוץ
+  DATA_MINIMIZATION     // דוח צמצום מידע
+  SECURITY_PROCEDURE    // נוהל אבטחת מידע
+  DSR_PROCEDURE         // נוהל DSR
+  OTHER
+}
+
+enum DocStatus {
+  DRAFT_AI              // טיוטת AI
+  UNDER_REVIEW          // בבדיקת DPO
+  NEEDS_EDIT            // דורש עריכה
+  APPROVED              // מאושר
+  PUBLISHED             // פורסם / מוטמע
+  ARCHIVED
+}
+
+enum TaskType {
+  PRIVACY_POLICY
+  CONSENT_MECHANISMS
+  DSR_MECHANISM
+  UNSUBSCRIBE
+  DPA_VENDORS
+  TRANSFER_ABROAD
+  SECURITY_PROCEDURE
+  LOGGING
+  TRAINING
+  SYSTEM_MAPPING
+  ANNUAL_REVIEW
+  AUDITS
+  DATA_MINIMIZATION
+  PENETRATION_TEST
+  DPO_APPOINTMENT
+  OTHER
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  AWAITING_DPO
+  NEEDS_EDIT
+  COMPLETED
+  SKIPPED
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum VendorRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CollectionMethod {
+  DIRECT         // ישירות מנושאי המידע
+  THIRD_PARTY    // מצדדים שלישיים
+  MIXED          // שילוב
+}
+
+// ============== CORE MODELS ==============
+
+model Organization {
+  id            String   @id @default(cuid())
+  name          String
+  legalName     String
+  taxId         String   @unique
+  type          OrgType
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  users         User[]
+  dataAssets    DataAsset[]
+  vendors       Vendor[]
+  documents     Document[]
+  tasks         Task[]
+  conversations AiConversation[]
+  auditLogs     AuditLog[]
+  manager       Manager?
+
+  @@index([taxId])
+}
+
+model Manager {
+  id              String       @id @default(cuid())
+  organizationId  String       @unique
+  name            String
+  role            String
+  email           String
+  phone           String?
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id              String       @id @default(cuid())
+  clerkId         String       @unique
+  email           String       @unique
+  name            String
+  role            UserRole
+  organizationId  String?
+  createdAt       DateTime     @default(now())
+  lastLoginAt     DateTime?
+
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  conversations   AiConversation[]
+  auditLogs       AuditLog[]
+  approvedDocs    Document[]    @relation("DocumentApprover")
+
+  @@index([organizationId])
+  @@index([clerkId])
+}
+
+model DataAsset {
+  id                String            @id @default(cuid())
+  organizationId    String
+  name              String
+  purpose           String            @db.Text
+  collectionMethod  CollectionMethod
+  subjectsCount     Int
+  permissionsCount  Int
+  dataTypes         String[]          // ['identity', 'contact', 'medical', ...]
+  sensitiveTypes    String[]          // subset of dataTypes that are sensitive
+  hasSensitiveData  Boolean           @default(false)
+  transferAbroad    Boolean           @default(false)
+  transferDetails   String?           @db.Text
+  securityLevel     SecurityLevel
+  status            AssetStatus       @default(DRAFT)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendors           VendorDataAsset[]
+
+  @@index([organizationId])
+}
+
+model Vendor {
+  id                String            @id @default(cuid())
+  organizationId    String
+  name              String
+  activity          String            @db.Text
+  location          String            // ישראל / ארה"ב / EU / ...
+  hasStandardDPA    Boolean           @default(false)  // Google, AWS etc.
+  hasDPA            Boolean           @default(false)
+  dpaSignedAt       DateTime?
+  dpaExpiresAt      DateTime?
+  dpaDocumentId     String?
+  riskLevel         VendorRiskLevel   @default(MEDIUM)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dpaDocument       Document?         @relation("VendorDpaDocument", fields: [dpaDocumentId], references: [id])
+  dataAssets        VendorDataAsset[]
+
+  @@index([organizationId])
+}
+
+model VendorDataAsset {
+  vendorId      String
+  dataAssetId   String
+
+  vendor        Vendor     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  dataAsset     DataAsset  @relation(fields: [dataAssetId], references: [id], onDelete: Cascade)
+
+  @@id([vendorId, dataAssetId])
+}
+
+model Document {
+  id              String       @id @default(cuid())
+  organizationId  String
+  type            DocType
+  title           String
+  version         String       @default("1.0")
+  status          DocStatus    @default(DRAFT_AI)
+  content         Json         // structured content (markdown + placeholders filled)
+  htmlContent     String?      @db.Text
+  docxUrl         String?
+  pdfUrl          String?
+  contentHash     String?      // sha256 of content at approval
+  generatedAt     DateTime     @default(now())
+  submittedAt     DateTime?
+  approvedAt      DateTime?
+  approvedById    String?
+  publishedAt     DateTime?
+  reviewNotes     String?      @db.Text
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  approvedBy      User?        @relation("DocumentApprover", fields: [approvedById], references: [id])
+  vendorsWithDpa  Vendor[]     @relation("VendorDpaDocument")
+
+  @@index([organizationId])
+  @@index([type, status])
+}
+
+model Task {
+  id              String       @id @default(cuid())
+  organizationId  String
+  type            TaskType
+  title           String
+  description     String       @db.Text
+  status          TaskStatus   @default(NOT_STARTED)
+  priority        Priority
+  dueDate         DateTime?
+  legalReference  String
+  data            Json?        // module-specific data
+  completedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([status, priority])
+}
+
+model AiConversation {
+  id              String       @id @default(cuid())
+  organizationId  String
+  userId          String
+  contextType     String       // module name: privacy_policy / consent / dpa / ...
+  contextId       String?      // specific entity id if applicable
+  messages        Json         // [{ role, content, timestamp }]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId])
+  @@index([contextType])
+}
+
+model AuditLog {
+  id              String       @id @default(cuid())
+  organizationId  String
+  userId          String
+  action          String       // CREATE / UPDATE / APPROVE / DELETE / EXPORT
+  entityType      String       // DataAsset / Document / Task / Vendor
+  entityId        String
+  changes         Json?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime     @default(now())
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+}
